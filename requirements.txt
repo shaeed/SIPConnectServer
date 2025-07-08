@@ -3,3 +3,4 @@ uvicorn
 aiohttp
 google-auth
 asyncio
+requests
