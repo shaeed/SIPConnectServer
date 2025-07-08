@@ -1,0 +1,10 @@
+[
+  {
+    "device_id": "test_device",
+    "user_name": "test_user",
+    "user_pass": "test_pass",
+    "fcm_token": "test_fcm_token",
+    "oauth2_token": "test_token",
+    "oauth2_token_expiry": 12345
+  }
+]
