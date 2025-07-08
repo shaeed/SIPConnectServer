@@ -10,3 +10,4 @@ local.properties
 app/google-services.json
 app/debug
 asterisk-push-cb280-573d2c81893e.json
+__pycache__/
