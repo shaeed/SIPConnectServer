@@ -4,10 +4,12 @@ import asyncio
 from database import get_fcm_token, add_dummy_user, delete_device
 from oAuth2_generator import PROJECT_ID, get_oauth_token
 
-async def push_call_alert(sip_user: str, phone_number: str):
+async def push_call_alert(sip_user: str, phone_number: str, payload: dict):
     fcm_token = get_fcm_token(sip_user)
     oauth_token = get_oauth_token(sip_user)
     data = {"type": "call", "phone_number": phone_number}
+    if payload.get("type") == "missed":
+        data["type"] = "missed-call"
     return await call_firebase_api(oauth_token, fcm_token, data)
 
 async def push_sms_alert(sip_user: str, phone_number: str, message_body: str):

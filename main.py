@@ -1,3 +1,4 @@
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
@@ -15,6 +16,7 @@ class TokenPayload(BaseModel):
 class CallPayload(BaseModel):
     sip_user: str
     phone_number: str
+    type: Optional[str] = None
 
 class SmsPayload(BaseModel):
     sip_user: str
@@ -31,7 +33,7 @@ async def register_device(payload: TokenPayload):
 async def alert_client_on_call(payload: CallPayload):
     if not user_exits(payload.sip_user):
         raise HTTPException(status_code=404, detail="User not found")
-    return await push_call_alert(payload.sip_user, payload.phone_number)
+    return await push_call_alert(payload.sip_user, payload.phone_number, payload.__dict__)
 
 @app.post("/sip/alert/sms")
 async def alert_client_on_sms(payload: SmsPayload):
