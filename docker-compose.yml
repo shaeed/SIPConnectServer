@@ -1,0 +1,31 @@
+version: "3.8"
+
+services:
+  sipconnect:
+    build: .
+    container_name: sipconnect
+    privileged: true
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "10000-20000:10000-20000/udp"
+      - "8000:8000"
+    devices:
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - "/dev/ttyUSB1:/dev/ttyUSB1"
+      - "/dev/ttyUSB2:/dev/ttyUSB2"
+    volumes:
+      - ./your-local-configs:/etc/asterisk
+    restart: unless-stopped
+
+
+# -------------
+# Identify your Huawei dongle’s device path: Update docker-compose.yml devices: section accordingly.
+# docker-compose up -d --build
+# Modem permissions: On some systems you might need chmod or udev rules to let Docker access the USB device.
+# 
+# Privileged vs. devices: For USB modems, privileged: true is usually necessary because USB serial interfaces can expose multiple /dev/ttyUSB*.
+# 
+# RTP range: Make sure your firewall opens UDP 10000-20000.
+# 
+# Debug: If calls fail, use asterisk -rvvv to attach to the running console.

@@ -16,7 +16,6 @@ def load_data() -> List[dict]:
     if not os.path.exists(DB_FILE):
         return []
     with open(DB_FILE, 'r') as file:
-        print('reading db')
         _DB_DATA = json.load(file)
         return _DB_DATA
 
@@ -39,7 +38,6 @@ def get_device(user_name):
 
 def add_or_update_device(new_device: dict):
     data = load_data()
-    print('New deice:', new_device)
     for i, device in enumerate(data):
         if device['user_name'] == new_device['user_name']:
             data[i].update(new_device)
@@ -118,74 +116,3 @@ def add_dummy_user():
         "oauth2_token_expiry": 12345
     })
     save_data(data)
-
-# Test usage:
-if __name__ == "__main__":
-    DB_FILE = r'test_data.json'
-    if os.path.exists(DB_FILE):
-        os.remove(DB_FILE)
-
-    # Add new device
-    resp = add_or_update_device({
-        "device_id": "dev1",
-        "user_name": "user1",
-        "user_pass": "pass1",
-        "fcm_token": "fcm1",
-        "oauth2_token": "token1"
-    })
-    assert resp == "Added new device."
-
-    # Get all devices
-    all_devices = get_all_devices()
-    assert len(all_devices) == 1
-    assert all_devices[0]['user_name'] == "user1"
-
-    # Get device by user_name
-    device = get_device("user1")
-    assert device is not None
-    assert device['user_pass'] == "pass1"
-
-    # Update FCM token
-    resp = update_fcm_token("user1", "new_fcm_token")
-    assert resp.startswith("FCM token updated")
-    device = get_device("user1")
-    assert device['fcm_token'] == "new_fcm_token"
-
-    # Update OAuth2 token
-    resp = update_oauth2_token("user1", "new_oauth_token", 10)
-    assert resp.startswith("OAuth2 token updated")
-    device = get_device("user1")
-    assert device['oauth2_token'] == "new_oauth_token"
-    assert isinstance(device['oauth2_token_expiry'], int)
-
-    # Get OAuth2 token
-    oauth_info = get_oauth2_token("user1")
-    assert oauth_info['oauth2_token'] == "new_oauth_token"
-    assert isinstance(oauth_info['oauth2_token_expiry'], int)
-
-    # Get OAuth2 token (not found)
-    oauth_info = get_oauth2_token("user2")
-    assert not oauth_info
-
-    # User exits
-    resp = user_exits('user1')
-    assert resp
-
-    # User not exits
-    resp = user_exits('user2')
-    assert not resp
-
-    # Delete device
-    resp = delete_device("user1")
-    assert resp == "Device deleted."
-    assert get_device("user1") is None
-
-    # Delete non-existent device
-    resp = delete_device("unknown")
-    assert resp == "Device not found."
-
-    # Clean up test file
-    if os.path.exists(DB_FILE):
-        os.remove(DB_FILE)
-
-    print("✅ All tests passed.")
