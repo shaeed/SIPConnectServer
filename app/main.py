@@ -2,8 +2,8 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from database import add_or_update_device, user_exits
-from push_alerts import push_call_alert, push_sms_alert
+from app.database import add_or_update_device, user_exits
+from app.push_alerts import push_call_alert, push_sms_alert
 
 app = FastAPI()
 

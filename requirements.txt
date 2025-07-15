@@ -4,3 +4,4 @@ aiohttp
 google-auth
 asyncio
 requests
+httpx

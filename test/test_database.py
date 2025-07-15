@@ -75,3 +75,6 @@ class TestDatabase(unittest.TestCase):
     def test_delete_device_invalid_user(self):
         resp = db.delete_device("unknown")
         self.assertEqual(resp, "Device not found.")
+
+if __name__ == '__main__':
+    unittest.main()

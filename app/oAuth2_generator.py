@@ -5,7 +5,7 @@ import time
 from google.oauth2 import service_account
 from google.auth.transport.requests import AuthorizedSession, Request
 
-from database import get_oauth2_token, update_oauth2_token
+from app.database import get_oauth2_token, update_oauth2_token
 
 # Path to service account JSON key
 SERVICE_ACCOUNT_FILE = r"asterisk-push-cb280-573d2c81893e.json"

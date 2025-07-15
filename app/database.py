@@ -4,7 +4,7 @@ import os
 from typing import List
 
 # For this simple application, lets use file as database
-DB_FILE = r'data.json'
+DB_FILE = os.path.join('app', 'data.json')
 
 # global variable to cache the db entries
 _DB_DATA: List[dict] = []
