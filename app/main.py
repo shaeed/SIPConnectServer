@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from app.database import add_or_update_device, user_exits
+from app.database import user_exits, update_fcm_token
 from app.push_alerts import push_call_alert, push_sms_alert
 
 app = FastAPI()
@@ -10,8 +10,7 @@ app = FastAPI()
 class TokenPayload(BaseModel):
     device_id: str
     fcm_token: str
-    user_name: str
-    user_pass: str
+    sip_user: str
 
 class CallPayload(BaseModel):
     sip_user: str
@@ -25,9 +24,10 @@ class SmsPayload(BaseModel):
 
 @app.post("/sip/client/register")
 async def register_device(payload: TokenPayload):
-    if payload.fcm_token:
-        add_or_update_device(payload.__dict__)
-    return {"status": "success"}
+    if not user_exits(payload.sip_user):
+        raise HTTPException(status_code=404, detail="User not found")
+    message = update_fcm_token(payload.sip_user, payload.device_id, payload.fcm_token)
+    return {"status": "success", "message": message}
 
 @app.post("/sip/alert/call")
 async def alert_client_on_call(payload: CallPayload):

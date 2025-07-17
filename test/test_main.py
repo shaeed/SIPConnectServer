@@ -11,20 +11,21 @@ class TestMain(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "Running"})
 
-    @patch("app.main.add_or_update_device")
-    def test_register_device(self, mock_add_or_update):
+    @patch("app.main.user_exits")
+    @patch("app.main.update_fcm_token")
+    def test_register_device(self, mock_update_fcm_token, mock_user_exits):
+        mock_user_exits.return_value = True
+        mock_update_fcm_token.return_value = "mocked fun called"
         payload = {
             "device_id": "abc123",
             "fcm_token": "token_xyz",
-            "user_name": "sip_user",
-            "user_pass": "secret"
+            "sip_user": "sip_user"
         }
-
         response = client.post("/sip/client/register", json=payload)
 
-        mock_add_or_update.assert_called_once_with(payload)
+        mock_update_fcm_token.assert_called_once_with("sip_user", "abc123", "token_xyz")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "success"})
+        self.assertEqual({"status": "success", "message": "mocked fun called"}, response.json())
 
     @patch("app.main.user_exits")
     @patch("app.main.push_call_alert", new_callable=AsyncMock)

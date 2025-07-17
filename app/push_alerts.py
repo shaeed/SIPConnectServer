@@ -1,22 +1,22 @@
 
 import aiohttp
 import asyncio
-from app.database import get_fcm_token, add_dummy_user, delete_device
+from app.database import get_fcm_tokens, add_dummy_user, delete_device
 from app.oAuth2_generator import PROJECT_ID, get_oauth_token
 
 async def push_call_alert(sip_user: str, phone_number: str, payload: dict = None):
-    fcm_token = get_fcm_token(sip_user)
+    fcm_tokens = get_fcm_tokens(sip_user)
     oauth_token = get_oauth_token(sip_user)
     data = {"type": "call", "phone_number": phone_number}
     if payload and payload.get("type") == "missed":
         data["type"] = "missed-call"
-    return await call_firebase_api(oauth_token, fcm_token, data)
+    return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 
 async def push_sms_alert(sip_user: str, phone_number: str, message_body: str):
-    fcm_token = get_fcm_token(sip_user)
+    fcm_tokens = get_fcm_tokens(sip_user)
     oauth_token = get_oauth_token(sip_user)
     data = {"type": "sms", "phone_number": phone_number, "body": message_body}
-    return await call_firebase_api(oauth_token, fcm_token, data)
+    return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 
 
 async def call_firebase_api(oauth_token: str, fcm_token: str, data: dict) -> (int, str):
@@ -40,14 +40,3 @@ async def call_firebase_api(oauth_token: str, fcm_token: str, data: dict) -> (in
             res_data = await response.json()
             # print("Status:", status, "Response:", res_data)
             return {'status': status, 'data': res_data}
-
-# Few test case
-if __name__ == '__main__':
-    async def main():
-        add_dummy_user()
-        await asyncio.gather(
-            push_call_alert('dummy_user', '+919912345678'),
-            push_sms_alert('dummy_user', '+919912345678', 'sample message')
-        )
-        delete_device('dummy_user')
-    asyncio.run(main())

@@ -1,10 +1,19 @@
-[
-  {
-    "device_id": "test_device",
-    "user_name": "test_user",
-    "user_pass": "test_pass",
-    "fcm_token": "test_fcm_token",
-    "oauth2_token": "test_token",
-    "oauth2_token_expiry": 12345
-  }
-]
+{
+  "db_version": "0.01",
+  "users": [
+    {
+      "user_name": "test_user",
+      "user_pass": "test_pass",
+      "dongle_audio_interface": "/dev/ttyUSB1",
+      "dongle_data_interface": "/dev/ttyUSB2",
+      "devices": {
+        "device_id": {
+          "device_id": "device_id_used_as_key",
+          "fcm_token": "test_fcm_token"
+        }
+      },
+      "oauth2_token": "test_token",
+      "oauth2_token_expiry": 12345
+    }
+  ]
+}
