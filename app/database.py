@@ -14,7 +14,7 @@ def load_data() -> List[dict]:
     global _DB_FULL
     global _DB_DATA
 
-    if _DB_DATA:
+    if _DB_DATA and _DB_FULL:
         return _DB_DATA
     if not os.path.exists(DB_FILE):
         return []
