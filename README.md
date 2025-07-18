@@ -1,3 +1,5 @@
+[![Build Status](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml)
+
 # SIPConnectServer
 
 **SIPConnectServer** is a lightweight SIP (Session Initiation Protocol) server designed to handle SIP registrations, proxy calls, and integrate easily with VoIP clients and gateways.  

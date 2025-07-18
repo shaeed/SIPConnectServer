@@ -25,7 +25,6 @@ def load_data() -> List[dict]:
 
 
 def save_data(data: List[dict] = None):
-    global _DB_FULL
     global _DB_DATA
 
     if data is not None:
