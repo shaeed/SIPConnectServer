@@ -1,26 +1,19 @@
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from app.database import user_exits, update_fcm_token
+from app.models import User, TokenPayload, CallPayload, SmsPayload
 from app.push_alerts import push_call_alert, push_sms_alert
+from app.users import add_user
 
 app = FastAPI()
 
-class TokenPayload(BaseModel):
-    device_id: str
-    fcm_token: str
-    sip_user: str
-
-class CallPayload(BaseModel):
-    sip_user: str
-    phone_number: str
-    type: Optional[str] = None
-
-class SmsPayload(BaseModel):
-    sip_user: str
-    phone_number: str
-    body: str
+@app.post("/sip/users")
+async def create_users(user: User):
+    if user_exits(user.user_name):
+        raise HTTPException(status_code=409, detail="User name already present.")
+    message = await add_user(user)
+    return {"status": "success", "message": message}
 
 @app.post("/sip/client/register")
 async def register_device(payload: TokenPayload):

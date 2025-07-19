@@ -9,7 +9,7 @@ class TestDatabase(unittest.TestCase):
         if os.path.exists(db.DB_FILE):
             os.remove(db.DB_FILE)
         # Add new device
-        db.add_or_update_device({
+        db.add_or_update_user({
             "user_name": "user1",
             "user_pass": "pass1",
             "devices": {
@@ -72,13 +72,13 @@ class TestDatabase(unittest.TestCase):
         self.assertTrue(resp)
 
     def test_delete_device(self):
-        resp = db.delete_device("user1")
-        self.assertEqual(resp, "Device deleted.")
+        resp = db.delete_user("user1")
+        self.assertEqual(resp, "User deleted.")
         self.assertIsNone(db.get_user_data("user1"))
 
     def test_delete_device_invalid_user(self):
-        resp = db.delete_device("unknown")
-        self.assertEqual(resp, "Device not found.")
+        resp = db.delete_user("unknown")
+        self.assertEqual(resp, "User not found.")
 
 if __name__ == '__main__':
     unittest.main()

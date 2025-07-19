@@ -1,7 +1,7 @@
 
 import aiohttp
 import asyncio
-from app.database import get_fcm_tokens, add_dummy_user, delete_device
+from app.database import get_fcm_tokens, add_dummy_user, delete_user
 from app.oAuth2_generator import PROJECT_ID, get_oauth_token
 
 async def push_call_alert(sip_user: str, phone_number: str, payload: dict = None):

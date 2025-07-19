@@ -23,7 +23,6 @@ def load_data() -> List[dict]:
         _DB_DATA = _DB_FULL['users']
         return _DB_DATA
 
-
 def save_data(data: List[dict] = None):
     global _DB_DATA
 
@@ -44,24 +43,24 @@ def get_user_data(user_name) -> Optional[dict]:
             return user
     return None
 
-def add_or_update_device(new_device: dict) -> str:
-    data = get_all_users()
-    for i, device in enumerate(data):
-        if device['user_name'] == new_device['user_name']:
-            data[i].update(new_device)
-            save_data(data)
-            return "Updated existing device."
-    data.append(new_device)
-    save_data(data)
-    return "Added new device."
+def add_or_update_user(new_user: dict) -> str:
+    users = get_all_users()
+    for i, user in enumerate(users):
+        if user['user_name'] == new_user['user_name']:
+            users[i].update(new_user)
+            save_data(users)
+            return "Updated existing user."
+    users.append(new_user)
+    save_data(users)
+    return "Added new user."
 
-def delete_device(user_name) -> str:
-    data = get_all_users()
-    new_data = [d for d in data if d['user_name'] != user_name]
-    if len(data) == len(new_data):
-        return "Device not found."
+def delete_user(user_name) -> str:
+    users = get_all_users()
+    new_data = [d for d in users if d['user_name'] != user_name]
+    if len(users) == len(new_data):
+        return "User not found."
     save_data(new_data)
-    return "Device deleted."
+    return "User deleted."
 
 def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
     user_data = get_user_data(user_name)
