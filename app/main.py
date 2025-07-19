@@ -10,7 +10,7 @@ app = FastAPI()
 
 @app.post("/sip/users")
 async def create_users(user: User):
-    if user_exits(user.user_name):
+    if user_exits(user.username):
         raise HTTPException(status_code=409, detail="User name already present.")
     message = await add_user(user)
     return {"status": "success", "message": message}

@@ -62,7 +62,7 @@ pip install -r requirements.txt
 To start the server, run:
 
 ```bash
-uvicorn app/main:app --reaload
+uvicorn app.main:app --reaload
 ```
 Or use the provided Dockerfile to build and run a container:
 

@@ -67,12 +67,14 @@ def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
     if not user_data:
         return f"No device found with user_name '{user_name}'."
 
-    user_data['devices'] = {
+    if not user_data.get('devices'):
+        user_data['devices'] = {}
+    user_data['devices'].update({
         device_id: {
             'device_id': device_id,
             'fcm_token': new_fcm_token
         }
-    }
+    })
     save_data()
     return f"FCM token updated for user '{user_name}'."
 
