@@ -2,6 +2,7 @@ from typing import List
 
 import asyncio
 import aiofiles
+from pathlib import Path
 
 from app.asterisk_confi_template import dongle_header, dongle_template, pjsip_header, pjsip_template, extension_header, \
     extension_template
@@ -15,11 +16,11 @@ extension_file = r'/etc/asterisk/extensions.conf'
 edit_section_identifier = r';******** Auto generated lines below ********'
 
 async def update_file(header: str, content: List[str], path: str, replace: bool = False):
-    if replace:
-        file_content = ''
-    else:
+    if not replace and Path(path).exists():
         async with aiofiles.open(path, 'r') as file:
             file_content = await file.read()
+    else:
+        file_content = ''
 
     # get the default config lines
     if edit_section_identifier in file_content:
@@ -82,14 +83,14 @@ async def generate_configs() -> str:
     # Update config files
     await asyncio.gather(
         update_file(dongle_header, dongle_config, dongle_file),
-        update_file(pjsip_header, pjsip_config, pjsip_template),
+        update_file(pjsip_header, pjsip_config, pjsip_file),
         update_file(extension_header, extension_config, extension_file)
     )
     return "Asterisk config generated successfully."
 
 async def restart_asterisk() -> str:
     process = await asyncio.create_subprocess_exec(
-        'systemctl', 'restart', 'asterisk',
+        'asterisk', '-rx', 'core restart now',
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE
     )

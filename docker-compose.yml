@@ -1,7 +1,9 @@
 
 services:
   sipconnect:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: sipconnect
     privileged: true
     ports:
@@ -13,8 +15,8 @@ services:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
       - "/dev/ttyUSB1:/dev/ttyUSB1"
       - "/dev/ttyUSB2:/dev/ttyUSB2"
-    volumes:
-      - ./your-local-configs:/etc/asterisk
+    #volumes:
+    #  - ./your-local-configs:/etc/asterisk
     restart: unless-stopped
 
 

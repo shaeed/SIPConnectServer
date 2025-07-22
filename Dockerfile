@@ -1,10 +1,5 @@
 FROM debian:bullseye
 
-# Add contrib + non-free for bullseye
-#RUN echo "deb http://deb.debian.org/debian bullseye main contrib non-free" > /etc/apt/sources.list && \
-#    echo "deb http://security.debian.org/debian-security bullseye-security main contrib non-free" >> /etc/apt/sources.list && \
-#    echo "deb http://deb.debian.org/debian bullseye-updates main contrib non-free" >> /etc/apt/sources.list
-
 # Install Asterisk and build tools
 RUN apt-get update && \
     apt-get install -y \
@@ -19,6 +14,7 @@ RUN apt-get update && \
     libtool \
     libusb-1.0-0-dev \
     pkg-config \
+    sqlite3 \
     libsqlite3-dev \
     libjansson-dev \
     usbutils 
@@ -48,7 +44,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Copy supervisord config
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-COPY . /app
+COPY app /app/app
 
 # Start Asterisk and FastAPI with supervisord
-CMD ["/usr/bin/supervisord", "-n"]
+CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

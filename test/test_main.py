@@ -5,7 +5,7 @@ from app.main import app
 
 client = TestClient(app)
 
-class TestMain(unittest.TestCase):
+class TestMain(unittest.IsolatedAsyncioTestCase):
     def test_home(self):
         response = client.get("/")
         self.assertEqual(response.status_code, 200)

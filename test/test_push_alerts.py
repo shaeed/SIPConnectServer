@@ -1,34 +1,52 @@
 
 import unittest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, call, MagicMock
 from app.push_alerts import push_call_alert, push_sms_alert, call_firebase_api
 
-class TestPushAlerts(unittest.TestCase):
+class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
 
-    @patch("app.push_alert.get_fcm_token")
-    @patch("app.push_alert.get_oauth_token")
-    @patch("app.push_alert.call_firebase_api", new_callable=AsyncMock)
-    async def test_push_call_alert_normal_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_token):
-        mock_get_fcm_token.return_value = "mock_fcm_token"
+    @patch("app.push_alerts.get_fcm_tokens")
+    @patch("app.push_alerts.get_oauth_token")
+    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    async def test_push_call_alert_normal_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
+        mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
         mock_call_firebase_api.return_value = {"status": "success"}
 
         result = await push_call_alert("sip_user1", "+1234567890")
-        mock_get_fcm_token.assert_called_once_with("sip_user1")
+        mock_get_fcm_tokens.assert_called_once_with("sip_user1")
         mock_get_oauth_token.assert_called_once_with("sip_user1")
         mock_call_firebase_api.assert_awaited_once_with(
             "mock_oauth_token",
             "mock_fcm_token",
             {"type": "call", "phone_number": "+1234567890"}
         )
-        self.assertEqual(result, {"status": "success"})
+        self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alert.get_fcm_token")
-    @patch("app.push_alert.get_oauth_token")
-    @patch("app.push_alert.call_firebase_api", new_callable=AsyncMock)
-    async def test_push_call_alert_missed_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_token):
+    @patch("app.push_alerts.get_fcm_tokens")
+    @patch("app.push_alerts.get_oauth_token")
+    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    async def test_push_call_alert_normal_call_2_device(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
+        mock_get_fcm_tokens.return_value = ["mock_fcm_token1", "mock_fcm_token2"]
+        mock_get_oauth_token.return_value = "mock_oauth_token"
+        mock_call_firebase_api.return_value = {"status": "success"}
+
+        result = await push_call_alert("sip_user1", "+1234567890")
+        mock_get_fcm_tokens.assert_called_once_with("sip_user1")
+        mock_get_oauth_token.assert_called_once_with("sip_user1")
+        mock_call_firebase_api.assert_has_awaits([
+            call("mock_oauth_token", "mock_fcm_token1", {"type": "call", "phone_number": "+1234567890"}),
+            call("mock_oauth_token", "mock_fcm_token2", {"type": "call", "phone_number": "+1234567890"})
+        ])
+        self.assertEqual(mock_call_firebase_api.await_count, 2)
+        self.assertEqual(result, [{"status": "success"}, {"status": "success"}])
+
+    @patch("app.push_alerts.get_fcm_tokens")
+    @patch("app.push_alerts.get_oauth_token")
+    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    async def test_push_call_alert_missed_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
         # Arrange
-        mock_get_fcm_token.return_value = "mock_fcm_token"
+        mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
         mock_call_firebase_api.return_value = {"status": "success"}
         payload = {"type": "missed"}
@@ -39,13 +57,13 @@ class TestPushAlerts(unittest.TestCase):
             "mock_fcm_token",
             {"type": "missed-call", "phone_number": "+0987654321"}
         )
-        self.assertEqual(result, {"status": "success"})
+        self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alert.get_fcm_token")
-    @patch("app.push_alert.get_oauth_token")
-    @patch("app.push_alert.call_firebase_api", new_callable=AsyncMock)
-    async def test_push_sms_alert(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_token):
-        mock_get_fcm_token.return_value = "mock_fcm_token"
+    @patch("app.push_alerts.get_fcm_tokens")
+    @patch("app.push_alerts.get_oauth_token")
+    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    async def test_push_sms_alert(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
+        mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
         mock_call_firebase_api.return_value = {"status": "success"}
         sip_user = "sip_user1"
@@ -53,7 +71,7 @@ class TestPushAlerts(unittest.TestCase):
         message_body = "Hello, this is a test SMS."
 
         result = await push_sms_alert(sip_user, phone_number, message_body)
-        mock_get_fcm_token.assert_called_once_with(sip_user)
+        mock_get_fcm_tokens.assert_called_once_with(sip_user)
         mock_get_oauth_token.assert_called_once_with(sip_user)
         mock_call_firebase_api.assert_awaited_once_with(
             "mock_oauth_token",
@@ -64,19 +82,19 @@ class TestPushAlerts(unittest.TestCase):
                 "body": message_body
             }
         )
-        self.assertEqual(result, {"status": "success"})
+        self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alert.aiohttp.ClientSession")
+    @patch("app.push_alerts.aiohttp.ClientSession")
     async def test_call_firebase_api_success(self, mock_client_session):
-        mock_response = AsyncMock()
+        mock_response = MagicMock()
         mock_response.status = 200
         mock_response.json = AsyncMock(return_value={"name": "fake-message-id"})
+        # make response object as Context aware
+        mock_response.__aenter__ = AsyncMock(return_value=mock_response)
 
-        mock_post_context = AsyncMock()
-        mock_post_context.__aenter__.return_value = mock_response
-
-        mock_session_context = AsyncMock()
-        mock_session_context.__aenter__.return_value.post.return_value = mock_post_context
+        mock_session_context = MagicMock()
+        mock_session_context.__aenter__ = AsyncMock(return_value=mock_session_context)
+        mock_session_context.post = MagicMock(return_value=mock_response)
 
         mock_client_session.return_value = mock_session_context
 
