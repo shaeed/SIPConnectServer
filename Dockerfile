@@ -45,6 +45,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY app /app/app
+COPY scripts /app/scripts
 
 # Start Asterisk and FastAPI with supervisord
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

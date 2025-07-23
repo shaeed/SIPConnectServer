@@ -1,9 +1,10 @@
 import asyncio
 import traceback
 
-from app.asterisk_config_generator import generate_configs, restart_asterisk
+from app.asterisk_config_generator import generate_configs
 from app.database import get_all_users, add_or_update_user
 from app.models import User
+from app.services.asterisk import restart_asterisk
 
 
 async def add_user(user: User):

@@ -33,10 +33,13 @@ async def update_file(header: str, content: List[str], path: str, replace: bool 
     async with aiofiles.open(path, 'w') as file:
         await file.write(file_content)
 
+def get_dongle_id(user_name: str) -> str:
+    return f"dongle_{user_name}"
+
 def get_config_variables(user_data: dict) -> dict:
     user_name = user_data['user_name']
     user_pass = user_data['user_pass']
-    dongle_id = f"dongle_{user_name}"
+    dongle_id = get_dongle_id(user_name)
     dongle_audio = user_data['dongle_audio_interface']
     dongle_data = user_data['dongle_data_interface']
     voicemail_id = user_data['voicemail_id']
@@ -87,18 +90,3 @@ async def generate_configs() -> str:
         update_file(extension_header, extension_config, extension_file)
     )
     return "Asterisk config generated successfully."
-
-async def restart_asterisk() -> str:
-    process = await asyncio.create_subprocess_exec(
-        'asterisk', '-rx', 'core restart now',
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await process.communicate()
-
-    # log = f'[stdout]\n{stdout.decode()}'
-    log = f'[stderr]\n{stderr.decode()}'
-    if process.returncode == 0:
-        return "Asterisk restarted successfully."
-    else:
-        return f"Asterisk failed to restart. Return code: {process.returncode}. Log: {log}"

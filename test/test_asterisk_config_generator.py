@@ -133,24 +133,5 @@ class TestConfigGenerator(unittest.IsolatedAsyncioTestCase):
             mock_update_file.assert_awaited()
             self.assertEqual(mock_update_file.await_count, 3)
 
-    async def test_restart_asterisk_success(self):
-        mock_process = AsyncMock()
-        mock_process.communicate.return_value = (b"output", b"")
-        mock_process.returncode = 0
-
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-            result = await config_generator.restart_asterisk()
-            self.assertEqual(result, "Asterisk restarted successfully.")
-
-    async def test_restart_asterisk_failure(self):
-        mock_process = AsyncMock()
-        mock_process.communicate.return_value = (b"", b"error")
-        mock_process.returncode = 1
-
-        with patch("asyncio.create_subprocess_exec", return_value=mock_process):
-            result = await config_generator.restart_asterisk()
-            self.assertIn("Asterisk failed to restart", result)
-            self.assertIn("Return code: 1", result)
-
 if __name__ == '__main__':
     unittest.main()

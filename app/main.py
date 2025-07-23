@@ -1,10 +1,10 @@
-from typing import Optional
-
 from fastapi import FastAPI, HTTPException
 from app.database import user_exits, update_fcm_token
 from app.models import User, TokenPayload, CallPayload, SmsPayload
 from app.push_alerts import push_call_alert, push_sms_alert
 from app.users import add_user
+from app.services import gsm
+
 
 app = FastAPI()
 
@@ -33,6 +33,12 @@ async def alert_client_on_sms(payload: SmsPayload):
     if not user_exits(payload.sip_user):
         raise HTTPException(status_code=404, detail="User not found")
     return await push_sms_alert(payload.sip_user, payload.phone_number, payload.body)
+
+@app.post("/gsm/sms")
+async def send_gsm_sms(payload: SmsPayload):
+    if not user_exits(payload.sip_user):
+        raise HTTPException(status_code=404, detail="User not found")
+    return await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.sip_user)
 
 @app.get('/')
 async def home():
