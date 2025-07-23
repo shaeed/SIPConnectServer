@@ -8,7 +8,7 @@ DB_FILE = os.path.join('app', 'data.json')
 
 # global variable to cache the db entries
 _DB_FULL: dict = {}
-_DB_DATA: List[dict] = []
+_DB_DATA: List[dict] = [] # All users
 
 def load_data() -> List[dict]:
     global _DB_FULL
@@ -106,6 +106,20 @@ def get_oauth2_token(user_name: str) -> dict:
 def user_exits(user_name: str) -> bool:
     all_devs = get_all_users()
     return any(filter(lambda x: x['user_name'] == user_name, all_devs))
+
+def get_project_id() -> str:
+    return _DB_FULL['app-config']['firebase_project_id']
+
+def set_project_id(project_id: str):
+    _DB_FULL['app-config']['firebase_project_id'] = project_id
+    save_data()
+
+def get_service_account_file_path() -> str:
+    return _DB_FULL['app-config']['service_account_file']
+
+def set_service_account_file_path(sa_path: str):
+    _DB_FULL['app-config']['service_account_file'] = sa_path
+    save_data()
 
 def add_dummy_user():
     data = get_all_users()

@@ -3,15 +3,9 @@ import json
 import time
 
 from google.oauth2 import service_account
-from google.auth.transport.requests import AuthorizedSession, Request
+from google.auth.transport.requests import Request
 
-from app.database import get_oauth2_token, update_oauth2_token
-
-# Path to service account JSON key
-SERVICE_ACCOUNT_FILE = r"asterisk-push-cb280-573d2c81893e.json"
-
-# Firebase project ID
-PROJECT_ID = "asterisk-push-cb280"
+from app.database import get_oauth2_token, update_oauth2_token, get_service_account_file_path
 
 # oAuth2 token valid for 60 minutes, A time after which tokens should be renewed
 TIME_TO_RENEW = 50 * 60 # 50 minutes * 60 SECONDS
@@ -21,7 +15,7 @@ SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"]
 
 def get_authorized_session() -> (str, int):
     credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES
+        get_service_account_file_path(), scopes=SCOPES
     ).with_always_use_jwt_access(True)
     credentials.refresh(Request())
     jwt_decoded = decode_jwt_part(credentials.token)

@@ -1,5 +1,9 @@
 {
   "db_version": "0.01",
+  "app-config": {
+    "service_account_file": "uploads/dummy-service-account.json",
+    "firebase_project_id": "dummy-project-id"
+  },
   "users": [
     {
       "user_name": "test_user",

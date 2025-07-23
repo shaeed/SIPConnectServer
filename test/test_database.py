@@ -6,20 +6,24 @@ class TestDatabase(unittest.TestCase):
 
     def setUp(self):
         db.DB_FILE = r'test_data.json'
-        if os.path.exists(db.DB_FILE):
-            os.remove(db.DB_FILE)
-        # Add new device
-        db.add_or_update_user({
-            "user_name": "user1",
-            "user_pass": "pass1",
-            "devices": {
-                "dev1": {
-                    "device_id": "dev1",
-                    "fcm_token": "test_fcm_token"
-                }
+        db._DB_FULL = {
+            "app-config": {
+                "service_account_file": "uploads/test-file.json",
+                "firebase_project_id": "test-project"
             },
-            "oauth2_token": "token1"
-        })
+            "users": [{
+                "user_name": "user1",
+                "user_pass": "pass1",
+                "devices": {
+                    "dev1": {
+                        "device_id": "dev1",
+                        "fcm_token": "test_fcm_token"
+                    }
+                },
+                "oauth2_token": "token1"
+            }]
+        }
+        db._DB_DATA = db._DB_FULL["users"]
 
     @classmethod
     def tearDownClass(cls):
@@ -86,6 +90,24 @@ class TestDatabase(unittest.TestCase):
     def test_delete_device_invalid_user(self):
         resp = db.delete_user("unknown")
         self.assertEqual(resp, "User not found.")
+
+    def test_get_project_id(self):
+        project_id = db.get_project_id()
+        self.assertEqual(project_id, 'test-project')
+
+    def test_set_project_id(self):
+        db.set_project_id('new-test-project')
+        project_id = db.get_project_id()
+        self.assertEqual(project_id, 'new-test-project')
+
+    def test_get_service_account_file_path(self):
+        file_path = db.get_service_account_file_path()
+        self.assertEqual(file_path, 'uploads/test-file.json')
+
+    def test_set_service_account_file_path(self):
+        db.set_service_account_file_path('new_file_path.json')
+        file_path = db.get_service_account_file_path()
+        self.assertEqual(file_path, 'new_file_path.json')
 
 if __name__ == '__main__':
     unittest.main()

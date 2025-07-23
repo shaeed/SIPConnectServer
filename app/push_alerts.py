@@ -1,8 +1,8 @@
 
 import aiohttp
 import asyncio
-from app.database import get_fcm_tokens
-from app.oAuth2_generator import PROJECT_ID, get_oauth_token
+from app.database import get_fcm_tokens, get_project_id
+from app.oAuth2_generator import get_oauth_token
 
 async def push_call_alert(sip_user: str, phone_number: str, payload: dict = None):
     fcm_tokens = get_fcm_tokens(sip_user)
@@ -20,7 +20,7 @@ async def push_sms_alert(sip_user: str, phone_number: str, message_body: str):
 
 
 async def call_firebase_api(oauth_token: str, fcm_token: str, data: dict) -> (int, str):
-    url = f"https://fcm.googleapis.com/v1/projects/{PROJECT_ID}/messages:send"
+    url = f"https://fcm.googleapis.com/v1/projects/{get_project_id()}/messages:send"
 
     headers = {
         "Authorization": f"Bearer {oauth_token}",
