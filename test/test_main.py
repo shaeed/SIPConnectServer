@@ -9,7 +9,8 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
 
     def test_home(self):
         with patch("app.main.get_service_account_file_path", return_value = "test-service.json"), \
-            patch("app.main.get_project_id", return_value="test-project"):
+            patch("app.main.get_project_id", return_value="test-project"), \
+            patch("app.main.read_ttyUSB_devices", return_value=["tty1", "tty2"]):
             response = client.get("/")
             self.assertEqual(response.status_code, 200)
 

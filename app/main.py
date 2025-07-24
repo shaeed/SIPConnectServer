@@ -8,7 +8,8 @@ from fastapi.templating import Jinja2Templates
 from app.database import user_exits, update_fcm_token, get_all_users, set_project_id, set_service_account_file_path, \
     get_service_account_file_path, get_project_id
 from app.models import User, TokenPayload, CallPayload, SmsPayload
-from app.push_alerts import push_call_alert, push_sms_alert
+from app.services.firebase import push_call_alert, push_sms_alert
+from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
 from app.services import gsm
 
@@ -18,7 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
+# interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
 
 @app.post("/sip/users")
 async def create_users(user: User):
@@ -57,7 +58,8 @@ async def alert_client_on_sms(payload: SmsPayload):
 async def send_gsm_sms(payload: SmsPayload):
     if not user_exits(payload.sip_user):
         raise HTTPException(status_code=404, detail="User not found")
-    return await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.sip_user)
+    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.sip_user)
+    return {"status": "success", "message": message}
 
 # @app.get('/')
 # async def home():
@@ -72,8 +74,7 @@ async def dashboard(request: Request):
     project_id = get_project_id()
     project_id = '' if 'dummy-project-id' == project_id else project_id
 
-    if templates is None:
-        templates = Jinja2Templates(directory=TEMPLATES_DIR)
+    interfaces = await read_ttyUSB_devices()
 
     return templates.TemplateResponse(request, "dashboard.html", {
         "request": request,

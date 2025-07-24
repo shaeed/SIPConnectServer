@@ -1,13 +1,13 @@
 
 import unittest
 from unittest.mock import patch, AsyncMock, call, MagicMock
-from app.push_alerts import push_call_alert, push_sms_alert, call_firebase_api
+from app.services.firebase import push_call_alert, push_sms_alert, call_firebase_api
 
 class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
 
-    @patch("app.push_alerts.get_fcm_tokens")
-    @patch("app.push_alerts.get_oauth_token")
-    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    @patch("app.services.firebase.get_fcm_tokens")
+    @patch("app.services.firebase.get_oauth_token")
+    @patch("app.services.firebase.call_firebase_api", new_callable=AsyncMock)
     async def test_push_call_alert_normal_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
         mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
@@ -23,9 +23,9 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alerts.get_fcm_tokens")
-    @patch("app.push_alerts.get_oauth_token")
-    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    @patch("app.services.firebase.get_fcm_tokens")
+    @patch("app.services.firebase.get_oauth_token")
+    @patch("app.services.firebase.call_firebase_api", new_callable=AsyncMock)
     async def test_push_call_alert_normal_call_2_device(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
         mock_get_fcm_tokens.return_value = ["mock_fcm_token1", "mock_fcm_token2"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
@@ -41,9 +41,9 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(mock_call_firebase_api.await_count, 2)
         self.assertEqual(result, [{"status": "success"}, {"status": "success"}])
 
-    @patch("app.push_alerts.get_fcm_tokens")
-    @patch("app.push_alerts.get_oauth_token")
-    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    @patch("app.services.firebase.get_fcm_tokens")
+    @patch("app.services.firebase.get_oauth_token")
+    @patch("app.services.firebase.call_firebase_api", new_callable=AsyncMock)
     async def test_push_call_alert_missed_call(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
         # Arrange
         mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
@@ -59,9 +59,9 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alerts.get_fcm_tokens")
-    @patch("app.push_alerts.get_oauth_token")
-    @patch("app.push_alerts.call_firebase_api", new_callable=AsyncMock)
+    @patch("app.services.firebase.get_fcm_tokens")
+    @patch("app.services.firebase.get_oauth_token")
+    @patch("app.services.firebase.call_firebase_api", new_callable=AsyncMock)
     async def test_push_sms_alert(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens):
         mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
@@ -84,8 +84,10 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result, [{"status": "success"}])
 
-    @patch("app.push_alerts.aiohttp.ClientSession")
-    async def test_call_firebase_api_success(self, mock_client_session):
+    @patch("app.services.firebase.aiohttp.ClientSession")
+    @patch("app.services.firebase.get_project_id")
+    async def test_call_firebase_api_success(self, mock_get_project_id, mock_client_session):
+        mock_get_project_id.return_value = "test-project"
         mock_response = MagicMock()
         mock_response.status = 200
         mock_response.json = AsyncMock(return_value={"name": "fake-message-id"})

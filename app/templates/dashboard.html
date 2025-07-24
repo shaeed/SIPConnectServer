@@ -70,8 +70,8 @@
             <div class="card-body">
                 <form action="/upload_sa" method="post" enctype="multipart/form-data">
                     <div class="mb-3">
-                        <label class="form-label">Firebase Project ID: {{ sa_status }}</label>
-                        <label class="form-label">Service Accounts file {{ sa_status }}</label>
+                        <label class="form-label">Firebase Project ID: {{ project_id }}</label> <br>
+                        <label class="form-label">Service Accounts file: {{ sa_status }}</label>
                         <input class="form-control" type="file" name="config_file" accept=".json" required>
                     </div>
                     <button type="submit" class="btn btn-primary">Upload</button>
