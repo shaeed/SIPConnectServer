@@ -14,7 +14,8 @@ from app.services import gsm
 
 
 app = FastAPI()
-templates = Jinja2Templates(directory="app/templates")
+TEMPLATES_DIR = r'app/templates'
+templates = None
 
 interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
 
@@ -63,11 +64,16 @@ async def send_gsm_sms(payload: SmsPayload):
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
+    global templates
     users = get_all_users()
     sa_file = get_service_account_file_path()
     sa_status = f'[Valid file already uploaded]' if 'dummy' not in sa_file else ''
     project_id = get_project_id()
     project_id = '' if 'dummy-project-id' == project_id else project_id
+
+    if templates is None:
+        templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
     return templates.TemplateResponse("dashboard.html", {
         "request": request,
         "audio_interfaces": interfaces,

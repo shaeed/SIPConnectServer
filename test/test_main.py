@@ -1,15 +1,19 @@
 import unittest
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
-from app.main import app
+import app.main as main
 
-client = TestClient(app)
+client = TestClient(main.app)
 
 class TestMain(unittest.IsolatedAsyncioTestCase):
+    def setUp(self):
+        main.TEMPLATES_DIR = r'../app/templates'
+
     def test_home(self):
-        response = client.get("/")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "Running"})
+        with patch("app.main.get_service_account_file_path", return_value = "test-service.json"), \
+            patch("app.main.get_project_id", return_value="test-project"):
+            response = client.get("/")
+            self.assertEqual(response.status_code, 200)
 
     @patch("app.main.user_exits")
     @patch("app.main.update_fcm_token")
