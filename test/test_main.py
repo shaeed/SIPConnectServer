@@ -6,8 +6,6 @@ import app.main as main
 client = TestClient(main.app)
 
 class TestMain(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        main.TEMPLATES_DIR = r'../app/templates'
 
     def test_home(self):
         with patch("app.main.get_service_account_file_path", return_value = "test-service.json"), \

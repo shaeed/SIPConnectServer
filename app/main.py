@@ -15,7 +15,7 @@ from app.services import gsm
 
 app = FastAPI()
 TEMPLATES_DIR = r'app/templates'
-templates = None
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
 interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
 
