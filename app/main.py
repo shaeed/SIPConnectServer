@@ -14,8 +14,9 @@ from app.services import gsm
 
 
 app = FastAPI()
-TEMPLATES_DIR = r'app/templates'
-templates = Jinja2Templates(directory=TEMPLATES_DIR)
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
 
@@ -74,7 +75,7 @@ async def dashboard(request: Request):
     if templates is None:
         templates = Jinja2Templates(directory=TEMPLATES_DIR)
 
-    return templates.TemplateResponse("dashboard.html", {
+    return templates.TemplateResponse(request, "dashboard.html", {
         "request": request,
         "audio_interfaces": interfaces,
         "data_interfaces": interfaces,

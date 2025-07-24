@@ -1,10 +1,13 @@
 
 import json
 import os
+from pathlib import Path
 from typing import List, Optional
 
 # For this simple application, lets use file as database
-DB_FILE = os.path.join('app', 'data.json')
+BASE_DIR = Path(__file__).resolve().parent
+# DB_FILE = os.path.join('app', 'data.json')
+DB_FILE = str(BASE_DIR / 'data.json')
 
 # global variable to cache the db entries
 _DB_FULL: dict = {}
