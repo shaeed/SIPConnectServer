@@ -67,7 +67,6 @@ async def send_gsm_sms(payload: SmsPayload):
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    global templates
     users = get_all_users()
     sa_file = get_service_account_file_path()
     sa_status = f'[Valid file already uploaded]' if 'dummy' not in sa_file else ''
