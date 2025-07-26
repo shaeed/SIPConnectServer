@@ -92,6 +92,13 @@ def get_fcm_tokens(user_name: str) -> List[str]:
     tokens = [x['fcm_token'] for x in user_data['devices'].values()]
     return tokens
 
+def get_fcm_tokens_with_device_id(user_name: str) -> dict:
+    user_data = get_user_data(user_name)
+    if not user_data.get('devices'):
+        return {}
+    tokens = {x['device_id']: x['fcm_token'] for x in user_data['devices'].values()}
+    return tokens
+
 def update_oauth2_token(user_name: str, new_oauth2_token: str, expiry: int):
     user_data = get_user_data(user_name)
     if not user_data:

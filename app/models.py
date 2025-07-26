@@ -8,7 +8,7 @@ class User(BaseModel):
         ...,
         min_length=3,
         max_length=10,
-        description="User name (SIP user name, this has to be used to login the Asterisk from clients like ZoiPer).",
+        description="User name (SIP user name, will be used to login to Asterisk from clients like ZoiPer).",
         examples=["iram"]
     )
     password: str = Field(
@@ -44,3 +44,6 @@ class SmsPayload(BaseModel):
     sip_user: str
     phone_number: str
     body: str
+    device_id: Optional[str] = Field(
+        None, description="Device id from which this sms is being sent. [Will be used to filter the "
+                          "devices to forward the notification to other devices]")

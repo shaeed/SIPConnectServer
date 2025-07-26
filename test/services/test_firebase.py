@@ -84,6 +84,31 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         )
         self.assertEqual(result, [{"status": "success"}])
 
+    @patch("app.services.firebase.get_fcm_tokens_with_device_id")
+    @patch("app.services.firebase.get_oauth_token")
+    @patch("app.services.firebase.call_firebase_api", new_callable=AsyncMock)
+    async def test_push_sms_alert_filter_fcm(self, mock_call_firebase_api, mock_get_oauth_token, mock_get_fcm_tokens_with_device_id):
+        mock_get_fcm_tokens_with_device_id.return_value = {"dev1": "mock_fcm_token", "dev2": "mock_fcm_token2"}
+        mock_get_oauth_token.return_value = "mock_oauth_token"
+        mock_call_firebase_api.return_value = {"status": "success"}
+        sip_user = "sip_user1"
+        phone_number = "+1234567890"
+        message_body = "Hello, this is a test SMS."
+
+        result = await push_sms_alert(sip_user, phone_number, message_body, "dev2")
+        mock_get_fcm_tokens_with_device_id.assert_called_once_with(sip_user)
+        mock_get_oauth_token.assert_called_once_with(sip_user)
+        mock_call_firebase_api.assert_awaited_once_with(
+            "mock_oauth_token",
+            "mock_fcm_token",
+            {
+                "type": "sms",
+                "phone_number": phone_number,
+                "body": message_body
+            }
+        )
+        self.assertEqual(result, [{"status": "success"}])
+
     @patch("app.services.firebase.aiohttp.ClientSession")
     @patch("app.services.firebase.get_project_id")
     async def test_call_firebase_api_success(self, mock_get_project_id, mock_client_session):
