@@ -84,12 +84,12 @@ class TestDatabase(unittest.TestCase):
 
     def test_delete_device(self):
         resp = db.delete_user("user1")
-        self.assertEqual(resp, "User deleted.")
+        self.assertEqual(resp, "User user1 deleted.")
         self.assertIsNone(db.get_user_data("user1"))
 
     def test_delete_device_invalid_user(self):
         resp = db.delete_user("unknown")
-        self.assertEqual(resp, "User not found.")
+        self.assertEqual(resp, "User unknown not found.")
 
     def test_get_project_id(self):
         project_id = db.get_project_id()
