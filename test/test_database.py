@@ -51,6 +51,15 @@ class TestDatabase(unittest.TestCase):
         new_tokens = db.get_fcm_tokens("user1")
         self.assertEqual(new_tokens, ["new_fcm_token"])
 
+    def test_get_fcm_tokens(self):
+        tokens = db.get_fcm_tokens("user1")
+        self.assertEqual(tokens, ["test_fcm_token"])
+
+    def test_get_fcm_tokens_no_device(self):
+        del db._DB_DATA[0]["devices"]
+        tokens = db.get_fcm_tokens("user1")
+        self.assertEqual(tokens, [])
+
     def test_update_fcm_token_2_devices(self):
         resp = db.update_fcm_token("user1", "dev1", "new_fcm_token")
         resp = db.update_fcm_token("user1", "dev2", "new_fcm_token2")

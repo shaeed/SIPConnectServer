@@ -87,6 +87,8 @@ def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
 
 def get_fcm_tokens(user_name: str) -> List[str]:
     user_data = get_user_data(user_name)
+    if not user_data.get('devices'):
+        return []
     tokens = [x['fcm_token'] for x in user_data['devices'].values()]
     return tokens
 
