@@ -58,7 +58,7 @@ async def alert_client_on_call(payload: CallPayload):
 async def alert_client_on_sms(payload: SmsPayload):
     if not db.user_exits(payload.sip_user):
         raise HTTPException(status_code=404, detail="User not found")
-    return await push_sms_alert(payload.sip_user, payload.phone_number, payload.body)
+    return await push_sms_alert(payload.sip_user, payload.phone_number, payload.body, payload.device_id)
 
 @app.post("/gsm/sms")
 async def send_gsm_sms(payload: SmsPayload):
