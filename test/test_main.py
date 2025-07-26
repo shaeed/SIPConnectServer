@@ -74,7 +74,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
 
         response = client.post("/sip/alert/sms", json=payload)
         mock_db.user_exits.assert_called_once_with("sip_user")
-        mock_push_sms_alert.assert_awaited_once_with("sip_user", "+1234567890", "Hello!")
+        mock_push_sms_alert.assert_awaited_once_with("sip_user", "+1234567890", "Hello!", None)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "sent"})
 
