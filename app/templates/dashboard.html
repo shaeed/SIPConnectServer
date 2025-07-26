@@ -7,7 +7,6 @@
       document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('addUserForm').addEventListener('submit', async function (e) {
           e.preventDefault();
-
           const form = e.target;
           const data = {
             username: form.username.value,
@@ -22,7 +21,6 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
           });
-
           const result = await response.json();
           document.getElementById('addUserMessage').innerHTML =
           `<div class="alert alert-success">${result.message}</div>`;
@@ -32,7 +30,6 @@
         document.querySelectorAll('.updateUserForm').forEach(form => {
           form.addEventListener('submit', async function (e) {
             e.preventDefault();
-
             const username = form.dataset.username;
             const data = {
               username: username,
@@ -47,12 +44,47 @@
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(data)
             });
-
             const result = await response.json();
             form.querySelector('.updateUserMessage').innerHTML =
               `<div class="alert alert-success">${result.message}</div>`;
           });
+
+          const deleteBtn = form.querySelector('.deleteUserBtn');
+          deleteBtn.addEventListener('click', async function () {
+            const username = form.dataset.username;
+            if (!confirm(`Are you sure you want to delete user ${username}?`)) {
+              return;
+            }
+            const response = await fetch('/sip/users/' + username, {
+              method: 'DELETE'
+            });
+
+            const result = await response.json();
+            if (result.message) {
+              form.innerHTML = `<div class="alert alert-danger">${result.message}</div>`;
+              // Or remove the form entirely:
+              // form.remove();
+            }
+          });
         });
+
+        document.getElementById('uploadDbForm').addEventListener('submit', async function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          const response = await fetch('/sip/db', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+          document.getElementById('uploadDbMessage').innerHTML =
+            `<div class="alert alert-info">${result.message}</div>`;
+          if (response.ok) {
+            // Reload page to see new data
+            location.reload();
+          }
+        });
+
       });
     </script>
 </head>
@@ -76,6 +108,19 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Upload</button>
                 </form>
+            </div>
+        </div>
+        <!-- DB backup & Restore -->
+        <div class="card mb-4">
+            <div class="card-header">Database Backup & Restore</div>
+            <div class="card-body">
+                <a href="/sip/db" class="btn btn-success">Download DB</a>
+
+                <form id="uploadDbForm" class="d-inline-block" enctype="multipart/form-data">
+                    <button type="submit" class="btn btn-secondary">Upload & Restore DB</button>
+                    <input class="form-control" type="file" name="db_file" accept=".json" required>
+                </form>
+                <div id="uploadDbMessage" class="mt-2"></div>
             </div>
         </div>
 
@@ -152,6 +197,7 @@
                                 <input class="form-control" type="text" name="voicemail_number" value="{{ user.voicemail_number }}">
                             </div>
                             <button type="submit" class="btn btn-primary">Update</button>
+                            <button type="button" class="btn btn-danger deleteUserBtn">Delete</button>
                             <div class="updateUserMessage mt-2"></div>
                         </form>
                     {% endfor %}

@@ -13,11 +13,15 @@ DB_FILE = str(BASE_DIR / 'data.json')
 _DB_FULL: dict = {}
 _DB_DATA: List[dict] = [] # All users
 
-def load_data() -> List[dict]:
+def get_db_file_path() -> str:
+    """Get the database json file path. This path will be used by database backup and restore."""
+    return DB_FILE
+
+def load_data(force: bool = False) -> List[dict]:
     global _DB_FULL
     global _DB_DATA
 
-    if _DB_DATA and _DB_FULL:
+    if not force and _DB_DATA and _DB_FULL:
         return _DB_DATA
     if not os.path.exists(DB_FILE):
         return []
@@ -61,9 +65,9 @@ def delete_user(user_name) -> str:
     users = get_all_users()
     new_data = [d for d in users if d['user_name'] != user_name]
     if len(users) == len(new_data):
-        return "User not found."
+        return f"User {user_name} not found."
     save_data(new_data)
-    return "User deleted."
+    return f"User {user_name} deleted."
 
 def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
     user_data = get_user_data(user_name)
