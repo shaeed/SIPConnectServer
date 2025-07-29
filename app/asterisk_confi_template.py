@@ -142,6 +142,6 @@ exten => _X.,1,NoOp(Calling ${{EXTEN}} through {ext_dongle_id})
 ; === SMS handler === ZoiPer to GSM message
 [{ext_gsm_outgoing_sms}]
 exten => _X.,1,NoOp(Sending SMS to ${{EXTEN}} through {ext_dongle_id})
- same => n,System(/usr/sbin/asterisk -rx "dongle sms {ext_dongle_id} ${{EXTEN}} '${{MESSAGE(body)}}'")
+ same => n,System(/usr/sbin/asterisk -rx "dongle sms {ext_dongle_id} ${{EXTEN}} ${{MESSAGE(body)}}")
  same => n,Hangup()
 """

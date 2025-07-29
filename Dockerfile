@@ -31,7 +31,8 @@ RUN git clone https://github.com/wdoekes/asterisk-chan-dongle.git && \
 # Install python and other tools
 RUN apt-get install -y \
     python3-pip \
-    supervisor
+    supervisor \
+    curl
 #     && rm -rf /var/lib/apt/lists/*
 
 # SIPConnect server
