@@ -72,14 +72,14 @@ extension_template = """
 ; === Incoming GSM call ===
 exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
  same => n,Set(PHONE=${{CALLERID(num)}})
- same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_username}", "phone_number": "${{PHONE}}"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}"}}')
 
  ; Wait loop: check Zoiper for up to 25 sec (2 sec interval)
  same => n,Set(TIMEOUT=25)
  same => n,Set(CHECK_INTERVAL=2)
  same => n,Set(ELAPSED=0)
 
- same => n(while_check),Set(STATUS=${{DEVICE_STATE(PJSIP/{ext_username})}})
+ same => n(while_check),Set(STATUS=${{DEVICE_STATE(PJSIP/{ext_sip_user})}})
  same => n,NoOp(Current endpoint status: ${{STATUS}})
  same => n,GotoIf($["${{STATUS}}" = "NOT_INUSE"]?got_online)
  same => n,GotoIf($[${{ELAPSED}} >= ${{TIMEOUT}}]?fallback)
@@ -89,7 +89,7 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 
 ; === If Zoiper comes online ===
  same => n(got_online),NoOp(Zoiper came online, dialing now)
- same => n,Dial(PJSIP/{ext_username},20)
+ same => n,Dial(PJSIP/{ext_sip_user},20)
  same => n,GotoIf($["${{DIALSTATUS}}"="ANSWER"]?done)
 
 ; === If no answer, fallback ===
@@ -99,7 +99,7 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 ; === Fallback ===
  same => n(fallback),NoOp(Running fallback: push + voicemail)
  ; Missed call push
- same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_username}", "phone_number": "${{PHONE}}", "type": "missed"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}", "type": "missed"}}')
  ; Voicemail (make sure mailbox exists!)
  ;same => n,Voicemail({pjsip_callerid}@default,u)
 
@@ -109,9 +109,9 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 exten => sms,1,NoOp(Incoming GSM SMS from ${{CALLERID(num)}} via {ext_dongle_id})
  same => n,Set(PHONE=${{CALLERID(num)}})
  same => n,Set(MESSAGE(body)=${{SMSMESSAGE}})
- same => n,System(curl -X POST http://localhost:8000/sip/alert/sms -H "Content-Type: application/json" -d '{{"username": "{ext_username}", "phone_number": "${{PHONE}}", "body": "${{SMS}}"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/sms -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}", "body": "${{SMS}}"}}')
  same => n,NoOp(POST result: ${{RESULT}})
- same => n,MessageSend(pjsip:{ext_username},sip:${{PHONE}}@localhost)
+ same => n,MessageSend(pjsip:{ext_sip_user},sip:${{PHONE}}@localhost)
  same => n,Hangup()
 
 ; SMS delivery report (optional cleanup)

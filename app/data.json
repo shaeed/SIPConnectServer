@@ -1,12 +1,12 @@
 {
-  "db_version": "0.02",
+  "db_version": "0.01",
   "app-config": {
-    "service_account_file": "uploads/service-account.json",
-    "firebase_project_id": "asterisk-push-cb280"
+    "service_account_file": "uploads/dummy-service-account.json",
+    "firebase_project_id": "dummy-project-id"
   },
   "users": [
     {
-      "username": "test_user",
+      "user_name": "test_user",
       "user_pass": "test_pass",
       "dongle_audio_interface": "/dev/ttyUSB1",
       "dongle_data_interface": "/dev/ttyUSB2",
@@ -19,29 +19,6 @@
       },
       "oauth2_token": "test_token",
       "oauth2_token_expiry": 12345
-    },
-    {
-      "username": "sipuser",
-      "user_pass": "stringst",
-      "dongle_audio_interface": "/dev/ttyUSB1",
-      "dongle_data_interface": "/dev/ttyUSB2",
-      "voicemail_id": "string",
-      "devices": {
-        "Google sdk_gphone64_x86_64": {
-          "device_id": "Google sdk_gphone64_x86_64",
-          "fcm_token": "cQuSmxlmRbGXKa1TUWO5TA:APA91bEOK8cSZGSlWrOiDIVMcl1zYfQ_AlE-YvcVbxYLppB46yi8yWzUstVtuXFEO2h6PUChZhA7LWpDD9UFC7a_nLCVN2bPdGrU4UAHijYAZMvmLBrPwpY"
-        },
-        "string": {
-          "device_id": "string",
-          "fcm_token": "string"
-        },
-        "string2": {
-          "device_id": "string2",
-          "fcm_token": "string"
-        }
-      },
-      "oauth2_token": "eyJ0eXAiOiAiSldUIiwgImFsZyI6ICJSUzI1NiIsICJraWQiOiAiNTczZDJjODE4OTNlMDY0Y2M2M2MxMGVjZGViNDYyNTBjNjIwNWEzMiJ9.eyJpc3MiOiAiYXN0ZXJpc2stY2xpZW50LXNydmFjY0Bhc3Rlcmlzay1wdXNoLWNiMjgwLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwgInN1YiI6ICJhc3Rlcmlzay1jbGllbnQtc3J2YWNjQGFzdGVyaXNrLXB1c2gtY2IyODAuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCAiaWF0IjogMTc1Mzk1ODI1MCwgImV4cCI6IDE3NTM5NjE4NTAsICJzY29wZSI6ICJodHRwczovL3d3dy5nb29nbGVhcGlzLmNvbS9hdXRoL2ZpcmViYXNlLm1lc3NhZ2luZyJ9.gPGBsfkYZSDtmFYzddEHWuhQviPpuMRH0k-d-t4taMHqoLtgSBM-ypm1DZG-S4OlJKcsv4wdS2zOSdYzLoVBsEU__xJwPR3Asr5MG5CMdQpcMVcYA1FwGtjd_8wKMxcDdOI1nITBdwEvZ8UYViEckXSTOcbI4dZnKArzsowWeIlpnQpff1KLVyUMmJHftw6tTgf9jiHvCjCVJlUkXpst5TvntfEmpUmX3ZDdGulhrgtMqwAvDTqGX_PCR929Qegod4SWfILHdBreECGdNlbzBrxyqCnx9z5Z5jxxAIOR1u31gyetvHsHK5GN6E-eageBmS9NFB3972V2Kq7A2GhwpA",
-      "oauth2_token_expiry": 1753961850
     }
   ]
 }
