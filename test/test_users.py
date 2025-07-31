@@ -26,7 +26,7 @@ class TestAddUser(unittest.IsolatedAsyncioTestCase):
 
             mock_add_or_update_user.assert_called_once()
             called_args = mock_add_or_update_user.call_args[0][0]
-            self.assertEqual(called_args["user_name"], "testuser")
+            self.assertEqual(called_args["username"], "testuser")
             self.assertEqual(called_args["voicemail_id"], 123)
             self.assertIn("Config done.", result)
             self.assertIn("Asterisk restarted.", result)

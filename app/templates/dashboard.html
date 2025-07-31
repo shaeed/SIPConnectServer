@@ -169,9 +169,9 @@
             <div class="card-body">
                 {% if users %}
                     {% for user in users %}
-                        <form class="updateUserForm border p-3 mb-3" data-username="{{ user.user_name }}">
-<!--                            <input type="hidden" name="username" value="{{ user.user_name }}">-->
-                            <h5>User Name: {{ user.user_name }}</h5>
+                        <form class="updateUserForm border p-3 mb-3" data-username="{{ user.username }}">
+<!--                            <input type="hidden" name="username" value="{{ user.username }}">-->
+                            <h5>User Name: {{ user.username }}</h5>
                             <div class="mb-2">
                                 <label>Password</label>
                                 <input class="form-control" type="text" name="password" value="{{ user.user_pass }}">

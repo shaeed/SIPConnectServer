@@ -38,33 +38,35 @@ async def update_user(username: str, user: User):
 
 @app.delete("/sip/users/{username}")
 async def delete_user(username: str):
-    message = delete_user(username)
+    if not db.user_exits(username):
+        raise HTTPException(status_code=409, detail="User name not present.")
+    message = db.delete_user(username)
     return {"message": message}
 
 @app.post("/sip/client/register")
 async def register_device(payload: TokenPayload):
-    if not db.user_exits(payload.sip_user):
+    if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
-    message = db.update_fcm_token(payload.sip_user, payload.device_id, payload.fcm_token)
+    message = db.update_fcm_token(payload.username, payload.device_id, payload.fcm_token)
     return {"message": message}
 
 @app.post("/sip/alert/call")
 async def alert_client_on_call(payload: CallPayload):
-    if not db.user_exits(payload.sip_user):
+    if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
-    return await push_call_alert(payload.sip_user, payload.phone_number, payload.__dict__)
+    return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
 
 @app.post("/sip/alert/sms")
 async def alert_client_on_sms(payload: SmsPayload):
-    if not db.user_exits(payload.sip_user):
+    if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
-    return await push_sms_alert(payload.sip_user, payload.phone_number, payload.body, payload.device_id)
+    return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
 
 @app.post("/gsm/sms")
 async def send_gsm_sms(payload: SmsPayload):
-    if not db.user_exits(payload.sip_user):
+    if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
-    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.sip_user)
+    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username)
     return {"status": "success", "message": message}
 
 # @app.get('/')

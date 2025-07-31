@@ -4,21 +4,21 @@ import asyncio
 from app.database import get_fcm_tokens, get_project_id, get_fcm_tokens_with_device_id
 from app.oAuth2_generator import get_oauth_token
 
-async def push_call_alert(sip_user: str, phone_number: str, payload: dict = None):
-    fcm_tokens = get_fcm_tokens(sip_user)
-    oauth_token = get_oauth_token(sip_user)
+async def push_call_alert(username: str, phone_number: str, payload: dict = None):
+    fcm_tokens = get_fcm_tokens(username)
+    oauth_token = get_oauth_token(username)
     data = {"type": "call", "phone_number": phone_number}
     if payload and payload.get("type") == "missed":
         data["type"] = "missed-call"
     return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 
-async def push_sms_alert(sip_user: str, phone_number: str, message_body: str, from_device: str = None):
+async def push_sms_alert(username: str, phone_number: str, message_body: str, from_device: str = None):
     if from_device:
-        token_dict = get_fcm_tokens_with_device_id(sip_user)
+        token_dict = get_fcm_tokens_with_device_id(username)
         fcm_tokens = [token_dict[x] for x in token_dict if x != from_device]
     else:
-        fcm_tokens = get_fcm_tokens(sip_user)
-    oauth_token = get_oauth_token(sip_user)
+        fcm_tokens = get_fcm_tokens(username)
+    oauth_token = get_oauth_token(username)
     data = {"type": "sms", "phone_number": phone_number, "body": message_body}
     return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 

@@ -66,13 +66,13 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         mock_get_fcm_tokens.return_value = ["mock_fcm_token"]
         mock_get_oauth_token.return_value = "mock_oauth_token"
         mock_call_firebase_api.return_value = {"status": "success"}
-        sip_user = "sip_user1"
+        username = "sip_user1"
         phone_number = "+1234567890"
         message_body = "Hello, this is a test SMS."
 
-        result = await push_sms_alert(sip_user, phone_number, message_body)
-        mock_get_fcm_tokens.assert_called_once_with(sip_user)
-        mock_get_oauth_token.assert_called_once_with(sip_user)
+        result = await push_sms_alert(username, phone_number, message_body)
+        mock_get_fcm_tokens.assert_called_once_with(username)
+        mock_get_oauth_token.assert_called_once_with(username)
         mock_call_firebase_api.assert_awaited_once_with(
             "mock_oauth_token",
             "mock_fcm_token",
@@ -91,13 +91,13 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
         mock_get_fcm_tokens_with_device_id.return_value = {"dev1": "mock_fcm_token", "dev2": "mock_fcm_token2"}
         mock_get_oauth_token.return_value = "mock_oauth_token"
         mock_call_firebase_api.return_value = {"status": "success"}
-        sip_user = "sip_user1"
+        username = "sip_user1"
         phone_number = "+1234567890"
         message_body = "Hello, this is a test SMS."
 
-        result = await push_sms_alert(sip_user, phone_number, message_body, "dev2")
-        mock_get_fcm_tokens_with_device_id.assert_called_once_with(sip_user)
-        mock_get_oauth_token.assert_called_once_with(sip_user)
+        result = await push_sms_alert(username, phone_number, message_body, "dev2")
+        mock_get_fcm_tokens_with_device_id.assert_called_once_with(username)
+        mock_get_oauth_token.assert_called_once_with(username)
         mock_call_firebase_api.assert_awaited_once_with(
             "mock_oauth_token",
             "mock_fcm_token",

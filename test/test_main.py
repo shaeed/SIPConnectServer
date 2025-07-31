@@ -22,7 +22,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         payload = {
             "device_id": "abc123",
             "fcm_token": "token_xyz",
-            "sip_user": "sip_user"
+            "username": "sip_user"
         }
         response = client.post("/sip/client/register", json=payload)
 
@@ -36,7 +36,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         mock_db.user_exits.return_value = True
         mock_push_call_alert.return_value = {"status": "sent"}
         payload = {
-            "sip_user": "sip_user",
+            "username": "sip_user",
             "phone_number": "+1234567890",
             "type": None
         }
@@ -51,7 +51,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
     def test_alert_client_on_call_user_not_found(self, mock_db):
         mock_db.user_exits.return_value = False
         payload = {
-            "sip_user": "sip_user",
+            "username": "sip_user",
             "phone_number": "+1234567890",
             "type": None
         }
@@ -67,7 +67,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         mock_db.user_exits.return_value = True
         mock_push_sms_alert.return_value = {"status": "sent"}
         payload = {
-            "sip_user": "sip_user",
+            "username": "sip_user",
             "phone_number": "+1234567890",
             "body": "Hello!"
         }
@@ -82,7 +82,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
     def test_alert_client_on_sms_user_not_found(self, mock_db):
         mock_db.user_exits.return_value = False
         payload = {
-            "sip_user": "sip_user",
+            "username": "sip_user",
             "phone_number": "+1234567890",
             "body": "Hello!"
         }

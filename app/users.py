@@ -9,7 +9,7 @@ from app.services.asterisk import restart_asterisk
 
 async def add_user(user: User):
     user_db_dict = {
-        "user_name": user.username,
+        "username": user.username,
         "user_pass": user.password,
         "dongle_audio_interface": user.audio_interface,
         "dongle_data_interface": user.data_interface

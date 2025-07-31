@@ -43,17 +43,17 @@ def save_data(data: List[dict] = None):
 def get_all_users() -> List[dict]:
     return load_data()
 
-def get_user_data(user_name) -> Optional[dict]:
+def get_user_data(username) -> Optional[dict]:
     data = get_all_users()
     for user in data:
-        if user['user_name'] == user_name:
+        if user['username'] == username:
             return user
     return None
 
 def add_or_update_user(new_user: dict) -> str:
     users = get_all_users()
     for i, user in enumerate(users):
-        if user['user_name'] == new_user['user_name']:
+        if user['username'] == new_user['username']:
             users[i].update(new_user)
             save_data(users)
             return "Updated existing user."
@@ -61,18 +61,18 @@ def add_or_update_user(new_user: dict) -> str:
     save_data(users)
     return "Added new user."
 
-def delete_user(user_name) -> str:
+def delete_user(username) -> str:
     users = get_all_users()
-    new_data = [d for d in users if d['user_name'] != user_name]
+    new_data = [d for d in users if d['username'] != username]
     if len(users) == len(new_data):
-        return f"User {user_name} not found."
+        return f"User {username} not found."
     save_data(new_data)
-    return f"User {user_name} deleted."
+    return f"User {username} deleted."
 
-def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
-    user_data = get_user_data(user_name)
+def update_fcm_token(username: str, device_id: str, new_fcm_token: str) -> str:
+    user_data = get_user_data(username)
     if not user_data:
-        return f"No device found with user_name '{user_name}'."
+        return f"No device found with username '{username}'."
 
     if not user_data.get('devices'):
         user_data['devices'] = {}
@@ -83,34 +83,34 @@ def update_fcm_token(user_name: str, device_id: str, new_fcm_token: str) -> str:
         }
     })
     save_data()
-    return f"FCM token updated for user '{user_name}'."
+    return f"FCM token updated for user '{username}'."
 
-def get_fcm_tokens(user_name: str) -> List[str]:
-    user_data = get_user_data(user_name)
+def get_fcm_tokens(username: str) -> List[str]:
+    user_data = get_user_data(username)
     if not user_data.get('devices'):
         return []
     tokens = [x['fcm_token'] for x in user_data['devices'].values()]
     return tokens
 
-def get_fcm_tokens_with_device_id(user_name: str) -> dict:
-    user_data = get_user_data(user_name)
+def get_fcm_tokens_with_device_id(username: str) -> dict:
+    user_data = get_user_data(username)
     if not user_data.get('devices'):
         return {}
     tokens = {x['device_id']: x['fcm_token'] for x in user_data['devices'].values()}
     return tokens
 
-def update_oauth2_token(user_name: str, new_oauth2_token: str, expiry: int):
-    user_data = get_user_data(user_name)
+def update_oauth2_token(username: str, new_oauth2_token: str, expiry: int):
+    user_data = get_user_data(username)
     if not user_data:
-        return f"No device found with user_name '{user_name}'."
+        return f"No device found with username '{username}'."
 
     user_data['oauth2_token'] = new_oauth2_token
     user_data['oauth2_token_expiry'] = expiry
     save_data()
-    return f"OAuth2 token updated for user '{user_name}'."
+    return f"OAuth2 token updated for user '{username}'."
 
-def get_oauth2_token(user_name: str) -> dict:
-    user_data = get_user_data(user_name)
+def get_oauth2_token(username: str) -> dict:
+    user_data = get_user_data(username)
     if not user_data:
         return {}
 
@@ -119,9 +119,9 @@ def get_oauth2_token(user_name: str) -> dict:
         "oauth2_token_expiry": user_data.get("oauth2_token_expiry", 0)
     }
 
-def user_exits(user_name: str) -> bool:
+def user_exits(username: str) -> bool:
     all_devs = get_all_users()
-    return any(filter(lambda x: x['user_name'] == user_name, all_devs))
+    return any(filter(lambda x: x['username'] == username, all_devs))
 
 def get_project_id() -> str:
     return _DB_FULL['app-config']['firebase_project_id']
@@ -140,7 +140,7 @@ def set_service_account_file_path(sa_path: str):
 def add_dummy_user():
     data = get_all_users()
     data.append({
-        "user_name": "dummy_user",
+        "username": "dummy_user",
         "user_pass": "test_pass",
         "oauth2_token": "test_token",
         "oauth2_token_expiry": 12345,
