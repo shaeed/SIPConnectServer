@@ -12,7 +12,7 @@ class TestDatabase(unittest.TestCase):
                 "firebase_project_id": "test-project"
             },
             "users": [{
-                "user_name": "user1",
+                "username": "user1",
                 "user_pass": "pass1",
                 "devices": {
                     "dev1": {
@@ -33,12 +33,12 @@ class TestDatabase(unittest.TestCase):
     def test_load_data(self):
         all_devices = db.load_data()
         self.assertEqual(len(all_devices), 1)
-        self.assertEqual(all_devices[0]['user_name'], "user1")
+        self.assertEqual(all_devices[0]['username'], "user1")
 
     def test_get_all_devices(self):
         all_devices = db.get_all_users()
         self.assertEqual(len(all_devices), 1)
-        self.assertEqual(all_devices[0]['user_name'], "user1")
+        self.assertEqual(all_devices[0]['username'], "user1")
 
     def test_get_device(self):
         device = db.get_user_data("user1")

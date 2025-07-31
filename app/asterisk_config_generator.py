@@ -33,19 +33,19 @@ async def update_file(header: str, content: List[str], path: str, replace: bool 
     async with aiofiles.open(path, 'w') as file:
         await file.write(file_content)
 
-def get_dongle_id(user_name: str) -> str:
-    return f"dongle_{user_name}"
+def get_dongle_id(username: str) -> str:
+    return f"dongle_{username}"
 
 def get_config_variables(user_data: dict) -> dict:
-    user_name = user_data['user_name']
+    username = user_data['username']
     user_pass = user_data['user_pass']
-    dongle_id = get_dongle_id(user_name)
+    dongle_id = get_dongle_id(username)
     dongle_audio = user_data['dongle_audio_interface']
     dongle_data = user_data['dongle_data_interface']
     voicemail_id = user_data['voicemail_id']
 
     gsm_incoming = f"gsmin_{dongle_id}"
-    voip_incoming = f"voipin_{user_name}"
+    voip_incoming = f"voipin_{username}"
     gsm_outgoing = f"gsmout_{dongle_id}"
     gsm_outgoing_sms = f"smsout_{dongle_id}"
 
@@ -56,13 +56,13 @@ def get_config_variables(user_data: dict) -> dict:
         "dongle_context": gsm_incoming,
         "dongle_smscontext": gsm_incoming,
 
-        "pjsip_auth": f"{user_name}_auth",
-        "pjsip_user": user_name,
+        "pjsip_auth": f"{username}_auth",
+        "pjsip_user": username,
         "pjsip_pass": user_pass,
         "pjsip_context": voip_incoming,
         "pjsip_callerid": voicemail_id,
 
-        "ext_sip_user": user_name,
+        "ext_sip_user": username,
         "ext_dongle_id": dongle_id,
         "ext_gsm_incoming": gsm_incoming,
         "ext_voip_incoming": voip_incoming,

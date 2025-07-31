@@ -28,17 +28,17 @@ def decode_jwt_part(jwt, part='payload'):
     b64 = parts[1 if part == 'payload' else 0] + '=='
     return json.loads(base64.urlsafe_b64decode(b64))
 
-def get_oauth_token(sip_user: str) -> str:
-    token_dict = get_oauth2_token(sip_user)
+def get_oauth_token(username: str) -> str:
+    token_dict = get_oauth2_token(username)
     if not token_dict:
-        raise Exception(f'Invalid user {sip_user}')
+        raise Exception(f'Invalid user {username}')
 
     expiry_time = token_dict['oauth2_token_expiry']
     current_time = int(time.time())
     if current_time > expiry_time:
         # Get new oAuth token
         token, expiry = get_authorized_session()
-        update_oauth2_token(sip_user, token, expiry)
+        update_oauth2_token(username, token, expiry)
         return token
     else:
         return token_dict['oauth2_token']

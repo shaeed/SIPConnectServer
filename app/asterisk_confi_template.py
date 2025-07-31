@@ -72,7 +72,7 @@ extension_template = """
 ; === Incoming GSM call ===
 exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
  same => n,Set(PHONE=${{CALLERID(num)}})
- same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"sip_user": "{ext_sip_user}", "phone_number": "${{PHONE}}"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}"}}')
 
  ; Wait loop: check Zoiper for up to 25 sec (2 sec interval)
  same => n,Set(TIMEOUT=25)
@@ -99,7 +99,7 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 ; === Fallback ===
  same => n(fallback),NoOp(Running fallback: push + voicemail)
  ; Missed call push
- same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"sip_user": "{ext_sip_user}", "phone_number": "${{PHONE}}", "type": "missed"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}", "type": "missed"}}')
  ; Voicemail (make sure mailbox exists!)
  ;same => n,Voicemail({pjsip_callerid}@default,u)
 
@@ -109,7 +109,7 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 exten => sms,1,NoOp(Incoming GSM SMS from ${{CALLERID(num)}} via {ext_dongle_id})
  same => n,Set(PHONE=${{CALLERID(num)}})
  same => n,Set(MESSAGE(body)=${{SMSMESSAGE}})
- same => n,System(curl -X POST http://localhost:8000/sip/alert/sms -H "Content-Type: application/json" -d '{{"sip_user": "{ext_sip_user}", "phone_number": "${{PHONE}}", "body": "${{SMS}}"}}')
+ same => n,System(curl -X POST http://localhost:8000/sip/alert/sms -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}", "body": "${{SMS}}"}}')
  same => n,NoOp(POST result: ${{RESULT}})
  same => n,MessageSend(pjsip:{ext_sip_user},sip:${{PHONE}}@localhost)
  same => n,Hangup()

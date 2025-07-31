@@ -33,15 +33,15 @@ class User(BaseModel):
 class TokenPayload(BaseModel):
     device_id: str
     fcm_token: str
-    sip_user: str
+    username: str
 
 class CallPayload(BaseModel):
-    sip_user: str
+    username: str
     phone_number: str
     type: Optional[str] = None
 
 class SmsPayload(BaseModel):
-    sip_user: str
+    username: str
     phone_number: str
     body: str
     device_id: Optional[str] = Field(

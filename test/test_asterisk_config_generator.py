@@ -8,7 +8,7 @@ class TestConfigGenerator(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         # dummy user data
         self.user_data = {
-            'user_name': 'shaeed',
+            'username': 'shaeed',
             'user_pass': 'secret',
             'dongle_audio_interface': 'audio0',
             'dongle_data_interface': 'data0',
@@ -116,7 +116,7 @@ class TestConfigGenerator(unittest.IsolatedAsyncioTestCase):
 
     async def test_generate_configs(self):
         fake_users = [{
-            "user_name": "bob",
+            "username": "bob",
             "user_pass": "pw",
             "dongle_audio_interface": "ttyA",
             "dongle_data_interface": "ttyB",
