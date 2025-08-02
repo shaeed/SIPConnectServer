@@ -6,7 +6,7 @@
   },
   "users": [
     {
-      "user_name": "test_user",
+      "username": "test_user",
       "user_pass": "test_pass",
       "dongle_audio_interface": "/dev/ttyUSB1",
       "dongle_data_interface": "/dev/ttyUSB2",

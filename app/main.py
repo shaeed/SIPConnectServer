@@ -68,7 +68,7 @@ async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
     message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username)
-    return {"status": "success", "message": message}
+    return {"message": message}
 
 # @app.get('/')
 # async def home():
