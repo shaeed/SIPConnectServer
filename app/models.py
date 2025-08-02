@@ -47,3 +47,8 @@ class SmsPayload(BaseModel):
     device_id: Optional[str] = Field(
         None, description="Device id from which this sms is being sent. [Will be used to filter the "
                           "devices to forward the notification to other devices]")
+
+class RestartPayload(BaseModel):
+    username: str
+    device_id: str = Field(
+        None, description="Device id from which this restart request was sent.")

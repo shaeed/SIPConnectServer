@@ -106,10 +106,10 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
  same => n(done),Hangup()
 
 ; Incoming SMS
-exten => sms,1,NoOp(Incoming GSM SMS from ${{CALLERID(num)}} via {ext_dongle_id})
+exten => sms,1,NoOp(Incoming GSM SMS via {ext_dongle_id} from ${{CALLERID(num)}}: ${{BASE64_DECODE(${{SMS_BASE64}})}})
  same => n,Set(PHONE=${{CALLERID(num)}})
- same => n,Set(MESSAGE(body)=${{SMSMESSAGE}})
- same => n,System(curl -X POST http://localhost:8000/sip/alert/sms -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}", "body": "${{SMS}}"}}')
+ same => n,Set(MESSAGE(body)=${{BASE64_DECODE(${{SMS_BASE64}})}})
+ same => n,AGI(agi_sms_sender.py,${{PHONE}},${{BASE64_DECODE(${{SMS_BASE64}})}},{ext_sip_user})
  same => n,NoOp(POST result: ${{RESULT}})
  same => n,MessageSend(pjsip:{ext_sip_user},sip:${{PHONE}}@localhost)
  same => n,Hangup()

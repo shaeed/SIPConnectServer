@@ -8,7 +8,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSON
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
-from app.models import User, TokenPayload, CallPayload, SmsPayload
+from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload
+from app.services.asterisk import restart_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
@@ -129,3 +130,10 @@ async def upload_db(db_file: UploadFile = File(...)):
         return {"message": "Database restored successfully."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error: {str(e)}"})
+
+@app.post("/sip/restart")
+async def restart_sip_server(payload: RestartPayload):
+    if not db.user_exits(payload.username):
+        raise HTTPException(status_code=409, detail="User name not present.")
+    message = await restart_asterisk()
+    return {"message": message}
