@@ -1,14 +1,13 @@
 import json
-import shutil
 from pathlib import Path
 
 import aiofiles
-from fastapi import FastAPI, HTTPException, Request, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
-from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload
+from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload, MessageResponse, DeviceResponse
 from app.services.asterisk import restart_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
@@ -23,33 +22,39 @@ templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
 
-@app.post("/sip/users")
-async def create_users(user: User):
+@app.post("/sip/users", response_model=MessageResponse)
+async def create_user(user: User):
     if db.user_exits(user.username):
         raise HTTPException(status_code=409, detail="User name already present.")
     message = await add_user(user)
-    return {"message": message}
+    return MessageResponse(message=message)
 
-@app.put("/sip/users/{username}")
+@app.put("/sip/users/{username}", response_model=MessageResponse)
 async def update_user(username: str, user: User):
     if not db.user_exits(username):
         raise HTTPException(status_code=409, detail="User name not present.")
     message = await add_user(user)
-    return {"message": message}
+    return MessageResponse(message=message)
 
-@app.delete("/sip/users/{username}")
+@app.delete("/sip/users/{username}", response_model=MessageResponse)
 async def delete_user(username: str):
     if not db.user_exits(username):
         raise HTTPException(status_code=409, detail="User name not present.")
     message = db.delete_user(username)
-    return {"message": message}
+    return MessageResponse(message=message)
 
-@app.post("/sip/client/register")
+@app.post("/sip/client/register", response_model=MessageResponse)
 async def register_device(payload: TokenPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
     message = db.update_fcm_token(payload.username, payload.device_id, payload.fcm_token)
-    return {"message": message}
+    return MessageResponse(message=message)
+
+@app.get("/sip/client/token", response_model=DeviceResponse)
+async def get_device_token(username: str = Query(..., description="The username (sip user name)."),
+                                  device_id: str = Query(..., description="The device ID")):
+    token = db.get_fcm_token(username, device_id)
+    return DeviceResponse(fcm_token=token)
 
 @app.post("/sip/alert/call")
 async def alert_client_on_call(payload: CallPayload):
@@ -63,16 +68,12 @@ async def alert_client_on_sms(payload: SmsPayload):
         raise HTTPException(status_code=404, detail="User not found")
     return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
 
-@app.post("/gsm/sms")
+@app.post("/gsm/sms", response_model=MessageResponse)
 async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User not found")
     message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username)
-    return {"message": message}
-
-# @app.get('/')
-# async def home():
-#     return {'status': 'Running'}
+    return MessageResponse(message=message)
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -131,9 +132,9 @@ async def upload_db(db_file: UploadFile = File(...)):
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error: {str(e)}"})
 
-@app.post("/sip/restart")
+@app.post("/sip/restart", response_model=MessageResponse)
 async def restart_sip_server(payload: RestartPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=409, detail="User name not present.")
     message = await restart_asterisk()
-    return {"message": message}
+    return MessageResponse(message=message)

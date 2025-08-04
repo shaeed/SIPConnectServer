@@ -92,6 +92,13 @@ def get_fcm_tokens(username: str) -> List[str]:
     tokens = [x['fcm_token'] for x in user_data['devices'].values()]
     return tokens
 
+def get_fcm_token(username: str, device_id: str) -> Optional[str]:
+    user_data = get_user_data(username)
+    if not user_data or not user_data.get('devices'):
+        return None
+    token = user_data['devices'].get(device_id, {}).get('fcm_token')
+    return token
+
 def get_fcm_tokens_with_device_id(username: str) -> dict:
     user_data = get_user_data(username)
     if not user_data.get('devices'):

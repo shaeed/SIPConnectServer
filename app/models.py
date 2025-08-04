@@ -3,6 +3,9 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class MessageResponse(BaseModel):
+    message: str
+
 class User(BaseModel):
     username: str = Field(
         ...,
@@ -34,6 +37,9 @@ class TokenPayload(BaseModel):
     device_id: str
     fcm_token: str
     username: str
+
+class DeviceResponse(BaseModel):
+    fcm_token: str
 
 class CallPayload(BaseModel):
     username: str

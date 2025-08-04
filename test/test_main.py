@@ -31,6 +31,15 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual({"message": "mocked fun called"}, response.json())
 
     @patch("app.main.db")
+    def test_get_device_token(self, mock_db):
+        mock_db.get_fcm_token.return_value = 'mock_token'
+        response = client.get("/sip/client/token?username=sip_user&device_id=dev")
+
+        mock_db.get_fcm_token.assert_called_once_with("sip_user", "dev")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({"fcm_token": "mock_token"}, response.json())
+
+    @patch("app.main.db")
     @patch("app.main.push_call_alert", new_callable=AsyncMock)
     def test_alert_client_on_call_success(self, mock_push_call_alert, mock_db):
         mock_db.user_exits.return_value = True
