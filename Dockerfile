@@ -48,6 +48,7 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY app /app/app
 COPY scripts /app/scripts
 COPY scripts/agi_sms_sender.py /usr/share/asterisk/agi-bin/
+RUN chmod +x /usr/share/asterisk/agi-bin/agi_sms_sender.py
 
 # Start Asterisk and FastAPI with supervisord
 CMD ["/usr/bin/supervisord", "-n", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

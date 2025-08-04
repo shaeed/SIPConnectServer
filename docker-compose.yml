@@ -6,21 +6,20 @@ services:
       dockerfile: Dockerfile
     container_name: sipconnect
     privileged: true
+    network_mode: host # Let host OS manage the ports
     ports:
-      - "5060:5060/udp"
-      - "5060:5060/tcp"
-    # - "10000-20000:10000-20000/udp"
-      - "8000:8000"
+      - "5060:5060/udp" # asterisk SIP signaling port
+      - "5060:5060/tcp" # asterisk SIP signaling port
+      - "10000-10020:10000-10020/udp" # Don't open the default port range of 10000 to 20000. Opening port in docker
+                                      # is resource intensive. Make sure same port range is updated in asterisk
+                                      # config (/etc/asterisk/rtp.conf).
+      - "8000:8000" # For fast api server
     restart: unless-stopped
 
 
 # -------------
-# Identify your Huawei dongle’s device path: Update docker-compose.yml devices: section accordingly.
 # docker-compose up -d --build
 # Modem permissions: On some systems you might need chmod or udev rules to let Docker access the USB device.
-# 
 # Privileged vs. devices: For USB modems, privileged: true is usually necessary because USB serial interfaces can expose multiple /dev/ttyUSB*.
-# 
-# RTP range: Make sure your firewall opens UDP 10000-20000.
-# 
+# RTP range: Make sure your firewall opens UDP 10000-10020.
 # Debug: If calls fail, use asterisk -rvvv to attach to the running console.

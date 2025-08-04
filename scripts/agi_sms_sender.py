@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import json
 import requests
 
 
@@ -8,11 +7,11 @@ caller = sys.argv[1]
 body = sys.argv[2]
 user = sys.argv[3]
 
-data = json.dumps({
+data = {
     "username": user,
     "phone_number": caller,
     "body": body
-})
+}
 
 response = requests.post(
     "http://localhost:8000/sip/alert/sms",
