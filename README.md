@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml) [![CodeQL](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql.yml/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql.yml)
+[![Build Status](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml) [![CodeQL](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql)
 
 # SIPConnectServer
 
