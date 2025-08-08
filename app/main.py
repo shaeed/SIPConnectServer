@@ -46,32 +46,32 @@ async def delete_user(username: str):
 @app.post("/sip/client/register", response_model=MessageResponse)
 async def register_device(payload: TokenPayload):
     if not db.user_exits(payload.username):
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=409, detail="User name not present.")
     message = db.update_fcm_token(payload.username, payload.device_id, payload.fcm_token)
     return MessageResponse(message=message)
 
 @app.get("/sip/client/token", response_model=DeviceResponse)
 async def get_device_token(username: str = Query(..., description="The username (sip user name)."),
                                   device_id: str = Query(..., description="The device ID")):
-    token = db.get_fcm_token(username, device_id)
+    token = db.get_fcm_token(username, device_id) or ""
     return DeviceResponse(fcm_token=token)
 
 @app.post("/sip/alert/call")
 async def alert_client_on_call(payload: CallPayload):
     if not db.user_exits(payload.username):
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=409, detail="User name not present.")
     return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
 
 @app.post("/sip/alert/sms")
 async def alert_client_on_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=409, detail="User name not present.")
     return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
 
 @app.post("/gsm/sms", response_model=MessageResponse)
 async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=409, detail="User name not present.")
     message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username)
     return MessageResponse(message=message)
 
