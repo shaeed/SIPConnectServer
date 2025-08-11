@@ -68,7 +68,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         response = client.post("/sip/alert/call", json=payload)
         mock_db.user_exits.assert_called_once_with("sip_user")
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"detail": "User not found"})
+        self.assertEqual(response.json(), {"detail": "User name not present."})
 
     @patch("app.main.db")
     @patch("app.main.push_sms_alert", new_callable=AsyncMock)
@@ -99,7 +99,7 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         response = client.post("/sip/alert/sms", json=payload)
         mock_db.user_exits.assert_called_once_with("sip_user")
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json(), {"detail": "User not found"})
+        self.assertEqual(response.json(), {"detail": "User name not present."})
 
 if __name__ == "__main__":
     unittest.main()
