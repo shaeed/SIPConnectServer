@@ -43,9 +43,9 @@ if __name__ == '__main__':
     }
     try:
         call_api(data)
-    except:
+    except requests.RequestException:
         print('SMS alert api call failed.', traceback.print_exc())
     try:
         insert_in_db(data)
-    except:
+    except sqlite3.DatabaseError:
         print('DB Insert failed.', traceback.print_exc())
