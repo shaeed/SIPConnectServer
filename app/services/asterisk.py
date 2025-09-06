@@ -53,7 +53,7 @@ async def configure_asterisk() -> str:
         await asyncio.sleep(1)
         message += " " + await restart_asterisk()  # must start after generate_configs() completed.
         return message
-    except:
+    except Exception:
         return "Either config generation or Asterisk restart failed. Exception: " + traceback.format_exc()
 
 async def first_time_init():
