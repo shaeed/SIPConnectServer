@@ -1,10 +1,6 @@
-import asyncio
-import traceback
-
-from app.asterisk_config_generator import generate_configs
 from app.database import get_all_users, add_or_update_user
 from app.models import User
-from app.services.asterisk import restart_asterisk
+from app.services.asterisk import configure_asterisk
 
 
 async def add_user(user: User):
@@ -19,16 +15,7 @@ async def add_user(user: User):
         voicemail_id = generate_voicemail_number()
     user_db_dict['voicemail_id'] = voicemail_id
     add_or_update_user(user_db_dict)
-
-    # Generate configs for user and restart asterisk
-    try:
-        # TODO convert below to BackgroundTasks
-        message = await generate_configs()
-        await asyncio.sleep(1)
-        message += " " + await restart_asterisk() # must start after generate_configs() completed.
-        return message
-    except:
-        return "Either config generation or Asterisk restart failed. Exception: " + traceback.format_exc()
+    return await configure_asterisk()
 
 def generate_voicemail_number():
     users = get_all_users()
