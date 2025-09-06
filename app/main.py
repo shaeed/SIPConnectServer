@@ -8,7 +8,7 @@ from fastapi.templating import Jinja2Templates
 
 import app.database as db
 from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload, MessageResponse, DeviceResponse
-from app.services.asterisk import restart_asterisk
+from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
@@ -128,7 +128,8 @@ async def upload_db(db_file: UploadFile = File(...)):
         async with aiofiles.open(db_file_path, "wb") as f:
             await f.write(contents)
         db.load_data(True)
-        return {"message": "Database restored successfully."}
+        message = await configure_asterisk()
+        return {"message": "Database restored successfully. " + message}
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"Error: {str(e)}"})
 
