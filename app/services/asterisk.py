@@ -2,6 +2,7 @@ import asyncio
 import re
 import sqlite3
 import traceback
+from typing import Tuple
 
 import aiofiles
 
@@ -28,7 +29,7 @@ async def restart_asterisk() -> str:
     else:
         return f"Asterisk failed to restart. Return code: {return_code}. Log: {log}"
 
-async def run_in_asterisk(command: str) -> (int, str):
+async def run_in_asterisk(command: str) -> Tuple[int, str]:
     process = await asyncio.create_subprocess_exec(
         'asterisk', '-rx', command,
         stdout=asyncio.subprocess.PIPE,
