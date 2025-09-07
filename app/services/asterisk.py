@@ -58,7 +58,8 @@ async def configure_asterisk() -> str:
         return "Either config generation or Asterisk restart failed. Exception: " + traceback.format_exc()
 
 async def first_time_init():
-    await update_rtp_ports(10000, 10060, RTP_FILE)
+    # RTP ports update not required as docker-compose.yaml is having 'network_mode: host'
+    # await update_rtp_ports(10000, 10060, RTP_FILE)
     await enable_sqlite_cdr(SQLite_CONFIG_FILE)
     await create_sql_tables(SQLite_FILE)
 

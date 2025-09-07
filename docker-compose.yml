@@ -6,14 +6,14 @@ services:
       dockerfile: Dockerfile
     container_name: sipconnect
     privileged: true
-    network_mode: host # Let host OS manage the ports
-    ports:
-      - "5060:5060/udp" # asterisk SIP signaling port
-      - "5060:5060/tcp" # asterisk SIP signaling port
-      - "10000-10060:10000-10060/udp" # Don't open the default port range of 10000 to 20000. Opening port in docker
+    network_mode: host # Let host OS manage the port
+    # ports:
+    #   - "5060:5060/udp" # asterisk SIP signaling port
+    #   - "5060:5060/tcp" # asterisk SIP signaling port
+    #   - "10000-10060:10000-10060/udp" # Don't open the default port range of 10000 to 20000. Opening port in docker
                                       # is resource intensive. Make sure same port range is updated in asterisk
                                       # config (/etc/asterisk/rtp.conf).
-      - "8000:8000" # For fast api server
+    #   - "8000:8000" # For fast api server
     restart: unless-stopped
 
 
