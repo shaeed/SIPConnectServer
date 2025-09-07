@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: sipconnect
     privileged: true
-    network_mode: host # Let host OS manage the port
+    network_mode: host # Let host OS manage the ports
     # ports:
     #   - "5060:5060/udp" # asterisk SIP signaling port
     #   - "5060:5060/tcp" # asterisk SIP signaling port
