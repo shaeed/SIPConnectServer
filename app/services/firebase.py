@@ -12,16 +12,17 @@ async def push_call_alert(username: str, phone_number: str, payload: dict = None
         data["type"] = "missed-call"
     return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 
-async def push_sms_alert(username: str, phone_number: str, message_body: str, from_device: str = None):
+async def push_sms_alert(
+        username: str, phone_number: str, message_body: str, from_device: str = None, forward_to_gsm: bool = False):
     if from_device:
         token_dict = get_fcm_tokens_with_device_id(username)
         fcm_tokens = [token_dict[x] for x in token_dict if x != from_device]
     else:
         fcm_tokens = get_fcm_tokens(username)
     oauth_token = get_oauth_token(username)
-    data = {"type": "sms", "phone_number": phone_number, "body": message_body}
+    # all the values must be string in this dictionary
+    data = {"type": "sms", "phone_number": phone_number, "body": message_body, "forward_to_gsm": str(forward_to_gsm)}
     return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
-
 
 async def call_firebase_api(oauth_token: str, fcm_token: str, data: dict) -> (int, str):
     url = f"https://fcm.googleapis.com/v1/projects/{get_project_id()}/messages:send"

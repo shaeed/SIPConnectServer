@@ -124,6 +124,7 @@ class TestConfigGenerator(unittest.IsolatedAsyncioTestCase):
         }]
 
         with patch("app.asterisk_config_generator.get_all_users", return_value=fake_users), \
+                patch("app.asterisk_config_generator.determine_outgoing_system", return_value="test_dev"), \
                 patch("app.asterisk_config_generator.dongle_template", "{dongle_id}"), \
                 patch("app.asterisk_config_generator.pjsip_template", "{pjsip_user}"), \
                 patch("app.asterisk_config_generator.extension_template", "{ext_sip_user}"), \

@@ -4,9 +4,11 @@ import asyncio
 import aiofiles
 from pathlib import Path
 
+from app.Constants import Const
 from app.asterisk_confi_template import dongle_header, dongle_template, pjsip_header, pjsip_template, extension_header, \
     extension_template
 from app.database import get_all_users
+from app.devices import determine_outgoing_system
 
 # Config file location
 dongle_file = r'/etc/asterisk/dongle.conf'
@@ -78,6 +80,8 @@ async def generate_configs() -> str:
     extension_config = []
 
     for user in users:
+        if determine_outgoing_system(user['username']) != Const.DEV_DONGLE_HUAWEI:
+            continue
         variables = get_config_variables(user)
         dongle_config.append(dongle_template.format(**variables))
         pjsip_config.append(pjsip_template.format(**variables))

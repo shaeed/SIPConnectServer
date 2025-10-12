@@ -79,7 +79,8 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
             {
                 "type": "sms",
                 "phone_number": phone_number,
-                "body": message_body
+                "body": message_body,
+                'forward_to_gsm': 'False'
             }
         )
         self.assertEqual(result, [{"status": "success"}])
@@ -104,7 +105,8 @@ class TestPushAlerts(unittest.IsolatedAsyncioTestCase):
             {
                 "type": "sms",
                 "phone_number": phone_number,
-                "body": message_body
+                "body": message_body,
+                'forward_to_gsm': 'False'
             }
         )
         self.assertEqual(result, [{"status": "success"}])
