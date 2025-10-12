@@ -7,7 +7,7 @@ from app.services.asterisk import send_sms
 from app.services.firebase import push_sms_alert
 
 
-async def send_gsm_sms(phone_number: str, message: str, username: str, device_id: str) -> str:
+async def send_gsm_sms(phone_number: str, message: str, username: str, device_id: str):
     if determine_outgoing_system(username) == Const.DEV_DONGLE_HUAWEI:
         dongle_id = get_dongle_id(username)
         try:

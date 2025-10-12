@@ -74,7 +74,7 @@ async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
     message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
-    return MessageResponse(message=str(message))
+    return MessageResponse(message=json.dumps(message))
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):

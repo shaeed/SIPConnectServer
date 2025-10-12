@@ -20,6 +20,7 @@ async def push_sms_alert(
     else:
         fcm_tokens = get_fcm_tokens(username)
     oauth_token = get_oauth_token(username)
+    # all the values must be string in this dictionary
     data = {"type": "sms", "phone_number": phone_number, "body": message_body, "forward_to_gsm": str(forward_to_gsm)}
     return await asyncio.gather(*[call_firebase_api(oauth_token, x, data) for x in fcm_tokens])
 
