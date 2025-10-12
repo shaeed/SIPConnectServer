@@ -62,18 +62,19 @@ async def alert_client_on_call(payload: CallPayload):
         raise HTTPException(status_code=404, detail="User name not present.")
     return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
 
-@app.post("/sip/alert/sms")
+@app.post("/sip/alert/sms", response_model=MessageResponse)
 async def alert_client_on_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
-    return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
+    message = await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
+    return MessageResponse(message=json.dumps(message))
 
 @app.post("/gsm/sms", response_model=MessageResponse)
 async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
-    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username)
-    return MessageResponse(message=message)
+    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
+    return MessageResponse(message=str(message))
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):

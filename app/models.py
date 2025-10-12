@@ -53,6 +53,8 @@ class SmsPayload(BaseModel):
     device_id: Optional[str] = Field(
         None, description="Device id from which this sms is being sent. [Will be used to filter the "
                           "devices to forward the notification to other devices]")
+    forward_to_gsm: Optional[bool] = Field(
+        None, description="Indicate forwarding the message to gsm via firebase notification")
 
 class RestartPayload(BaseModel):
     username: str
