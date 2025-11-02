@@ -116,8 +116,8 @@ async def get_sms_logs():
             "user": log[1],
             "number": log[2],
             "message": log[3],
-            "sms_type": log[3],
-            "timestamp": log[4]
+            "sms_type": log[4],
+            "timestamp": log[5]
         } for log in sms_logs
     ]
     return JSONResponse(content=data)
@@ -131,7 +131,7 @@ async def get_call_logs():
             "id": log[0],
             "user": log[1],
             "number": log[2],
-            "timestamp": log[4]
+            "timestamp": log[3]
         } for log in call_logs
     ]
     return JSONResponse(content=data)
