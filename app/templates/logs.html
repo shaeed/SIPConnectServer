@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Call & SMS Logs</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<div class="container">
+    <h1 class="mb-4">Call & SMS Logs</h1>
+    <a href="/" class="btn btn-secondary mb-4">← Back to Dashboard</a>
+
+    <!-- Call Logs Table -->
+    <div class="card mb-4">
+        <div class="card-header">Call Logs</div>
+        <div class="card-body">
+            <table id="callLogsTable" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Number</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SMS Logs Table -->
+    <div class="card mb-4">
+        <div class="card-header">SMS Logs</div>
+        <div class="card-body">
+            <table id="smsLogsTable" class="table table-striped table-bordered" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>User</th>
+                        <th>Number</th>
+                        <th>Message</th>
+                        <th>SMS Type</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- JS includes -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+$(document).ready(function() {
+    // Call Logs Table
+    $('#callLogsTable').DataTable({
+        ajax: '/api/logs/call',
+        columns: [
+            { data: 'id' },
+            { data: 'user' },
+            { data: 'number' },
+            { data: 'timestamp' }
+        ],
+        pageLength: 20,
+        order: [[3, 'desc']],
+        responsive: true
+    });
+
+    // SMS Logs Table
+    $('#smsLogsTable').DataTable({
+        ajax: '/api/logs/sms',
+        columns: [
+            { data: 'id' },
+            { data: 'user' },
+            { data: 'number' },
+            { data: 'message' },
+            { data: 'sms_type' },
+            { data: 'timestamp' }
+        ],
+        pageLength: 20,
+        order: [[5, 'desc']],
+        responsive: true
+    });
+});
+</script>
+</body>
+</html>

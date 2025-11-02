@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSON
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
+import app.database_sqlite as sql_db
 from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload, MessageResponse, DeviceResponse
 from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
@@ -60,12 +61,15 @@ async def get_device_token(username: str = Query(..., description="The username 
 async def alert_client_on_call(payload: CallPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
+    sql_db.insert_call_log(payload.username, payload.phone_number, payload.model_dump_json())
     return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
 
 @app.post("/sip/alert/sms", response_model=MessageResponse)
 async def alert_client_on_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
+    sql_db.insert_sms_log(
+        payload.username, payload.phone_number, payload.body, "alert sms", payload.model_dump_json())
     message = await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
     return MessageResponse(message=json.dumps(message))
 
@@ -73,6 +77,8 @@ async def alert_client_on_sms(payload: SmsPayload):
 async def send_gsm_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
+    sql_db.insert_sms_log(
+        payload.username, payload.phone_number, payload.body, "gsm sms", payload.model_dump_json())
     message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
     return MessageResponse(message=json.dumps(message))
 
@@ -94,6 +100,41 @@ async def dashboard(request: Request):
         "sa_status": sa_status,
         "project_id": project_id
     })
+
+@app.get("/logs", response_class=HTMLResponse)
+async def logs_page(request: Request):
+    """Render the logs page (empty table; data loaded via AJAX)."""
+    return templates.TemplateResponse("logs.html", {"request": request})
+
+@app.get("/api/logs/sms", response_class=JSONResponse)
+async def get_sms_logs():
+    """Return combined call + SMS logs as JSON."""
+    sms_logs = sql_db.get_sms_logs()
+    data = [
+        {
+            "id": log[0],
+            "user": log[1],
+            "number": log[2],
+            "message": log[3],
+            "sms_type": log[4],
+            "timestamp": log[5]
+        } for log in sms_logs
+    ]
+    return JSONResponse(content=data)
+
+@app.get("/api/logs/call", response_class=JSONResponse)
+async def get_call_logs():
+    """Return combined call + SMS logs as JSON."""
+    call_logs = sql_db.get_call_logs()
+    data = [
+        {
+            "id": log[0],
+            "user": log[1],
+            "number": log[2],
+            "timestamp": log[3]
+        } for log in call_logs
+    ]
+    return JSONResponse(content=data)
 
 @app.post("/upload_sa")
 async def upload_service_account_file(config_file: UploadFile = File(...)):

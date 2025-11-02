@@ -1,3 +1,4 @@
+import json
 import unittest
 from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
@@ -39,10 +40,12 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual({"fcm_token": "mock_token"}, response.json())
 
+    @patch("app.main.sql_db")
     @patch("app.main.db")
     @patch("app.main.push_call_alert", new_callable=AsyncMock)
-    def test_alert_client_on_call_success(self, mock_push_call_alert, mock_db):
+    def test_alert_client_on_call_success(self, mock_push_call_alert, mock_db, mock_sql_db):
         mock_db.user_exits.return_value = True
+        mock_sql_db.insert_call_log.return_value = None
         mock_push_call_alert.return_value = {"status": "sent"}
         payload = {
             "username": "sip_user",
@@ -51,6 +54,8 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         }
 
         response = client.post("/sip/alert/call", json=payload)
+        mock_sql_db.insert_call_log.assert_called_once_with("sip_user", "+1234567890",
+                                                            json.dumps(payload, indent=None, separators=(',', ':')))
         mock_db.user_exits.assert_called_once_with("sip_user")
         mock_push_call_alert.assert_awaited_once_with("sip_user", "+1234567890", payload)
         self.assertEqual(response.status_code, 200)
@@ -70,10 +75,12 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "User name not present."})
 
+    @patch("app.main.sql_db")
     @patch("app.main.db")
     @patch("app.main.push_sms_alert", new_callable=AsyncMock)
-    def test_alert_client_on_sms_success(self, mock_push_sms_alert, mock_db):
+    def test_alert_client_on_sms_success(self, mock_push_sms_alert, mock_db, mock_sql_db):
         mock_db.user_exits.return_value = True
+        mock_sql_db.insert_sms_log.return_value = None
         mock_push_sms_alert.return_value = {"status": "sent"}
         payload = {
             "username": "sip_user",
@@ -82,6 +89,10 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         }
 
         response = client.post("/sip/alert/sms", json=payload)
+        payload["device_id"] = None
+        payload["forward_to_gsm"] = None
+        mock_sql_db.insert_sms_log.assert_called_once_with("sip_user", "+1234567890", "Hello!", "alert sms",
+                                                           json.dumps(payload, indent=None, separators=(',', ':')))
         mock_db.user_exits.assert_called_once_with("sip_user")
         mock_push_sms_alert.assert_awaited_once_with("sip_user", "+1234567890", "Hello!", None)
         self.assertEqual(response.status_code, 200)
