@@ -7,10 +7,10 @@ from typing import Tuple
 import aiofiles
 
 from app.asterisk_config_generator import generate_configs, update_file
+from app.database_sqlite import create_sql_tables
 
 RTP_FILE = r'/etc/asterisk/rtp.conf'
 SQLite_CONFIG_FILE = r'/etc/asterisk/cdr_sqlite3_custom.conf'
-SQLite_FILE = r'/var/log/asterisk/master.db'
 
 
 async def send_sms(phone_number: str, message: str, dongle_id: str) -> str:
@@ -61,7 +61,7 @@ async def first_time_init():
     # RTP ports update not required as docker-compose.yaml is having 'network_mode: host'
     # await update_rtp_ports(10000, 10060, RTP_FILE)
     await enable_sqlite_cdr(SQLite_CONFIG_FILE)
-    await create_sql_tables(SQLite_FILE)
+    await create_sql_tables()
 
 async def update_rtp_ports(start: int, end: int, rtp_file: str):
     async with aiofiles.open(rtp_file, 'r') as file:
@@ -81,43 +81,3 @@ busy_timeout => 1000
 
     """
     await update_file('', [config], file_path, True)
-
-async def create_sql_tables(db_path: str) -> str:
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS cdr (
-            calldate     VARCHAR(30),
-            clid         VARCHAR(80),
-            src          VARCHAR(80),
-            dst          VARCHAR(80),
-            dcontext     VARCHAR(80),
-            channel      VARCHAR(80),
-            dstchannel   VARCHAR(80),
-            lastapp      VARCHAR(80),
-            lastdata     VARCHAR(80),
-            duration     INTEGER,
-            billsec      INTEGER,
-            disposition  VARCHAR(45),
-            amaflags     INTEGER,
-            accountcode  VARCHAR(20),
-            uniqueid     VARCHAR(32),
-            userfield    VARCHAR(255)
-        );
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS sms_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            user TEXT,
-            number TEXT,
-            message TEXT
-        );
-    """)
-
-    conn.commit()
-    cursor.close()
-    conn.close()
-    return f"CDR & sms_log table created (or already exists) in {db_path}"

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 
 import aiohttp
 import asyncio
@@ -26,6 +27,8 @@ async def push_sms_alert(
 
 async def call_firebase_api(oauth_token: str, fcm_token: str, data: dict) -> (int, str):
     url = f"https://fcm.googleapis.com/v1/projects/{get_project_id()}/messages:send"
+    # insert date & time
+    data["timestamp"] = datetime.now(timezone.utc).isoformat(timespec='seconds')
 
     headers = {
         "Authorization": f"Bearer {oauth_token}",
