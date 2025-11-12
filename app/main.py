@@ -120,7 +120,7 @@ async def get_sms_logs():
             "timestamp": log[5]
         } for log in sms_logs
     ]
-    return JSONResponse(content=data)
+    return JSONResponse(content={"data": data})
 
 @app.get("/api/logs/call", response_class=JSONResponse)
 async def get_call_logs():
@@ -134,7 +134,7 @@ async def get_call_logs():
             "timestamp": log[3]
         } for log in call_logs
     ]
-    return JSONResponse(content=data)
+    return JSONResponse(content={"data": data})
 
 @app.post("/upload_sa")
 async def upload_service_account_file(config_file: UploadFile = File(...)):
