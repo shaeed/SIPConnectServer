@@ -134,7 +134,7 @@ async def get_call_logs():
             "timestamp": log[3]
         } for log in call_logs
     ]
-    return JSONResponse(content=data)
+    return JSONResponse(content={"data": data})
 
 @app.post("/upload_sa")
 async def upload_service_account_file(config_file: UploadFile = File(...)):
