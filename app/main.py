@@ -1,14 +1,17 @@
 import json
 from pathlib import Path
+from typing import List
 
 import aiofiles
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
 import app.database_sqlite as sql_db
-from app.models import User, TokenPayload, CallPayload, SmsPayload, RestartPayload, MessageResponse, DeviceResponse
+from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayload,
+                        MessageResponse, DeviceResponse, FirebaseResponse,
+                        SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse)
 from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
@@ -57,21 +60,20 @@ async def get_device_token(username: str = Query(..., description="The username 
     token = db.get_fcm_token(username, device_id) or ""
     return DeviceResponse(fcm_token=token)
 
-@app.post("/sip/alert/call")
+@app.post("/sip/alert/call", response_model=List[FirebaseResponse])
 async def alert_client_on_call(payload: CallPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
     sql_db.insert_call_log(payload.username, payload.phone_number, payload.model_dump_json())
     return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
 
-@app.post("/sip/alert/sms", response_model=MessageResponse)
+@app.post("/sip/alert/sms", response_model=List[FirebaseResponse])
 async def alert_client_on_sms(payload: SmsPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
     sql_db.insert_sms_log(
         payload.username, payload.phone_number, payload.body, "alert sms", payload.model_dump_json())
-    message = await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
-    return MessageResponse(message=json.dumps(message))
+    return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
 
 @app.post("/gsm/sms", response_model=MessageResponse)
 async def send_gsm_sms(payload: SmsPayload):
@@ -79,8 +81,10 @@ async def send_gsm_sms(payload: SmsPayload):
         raise HTTPException(status_code=404, detail="User name not present.")
     sql_db.insert_sms_log(
         payload.username, payload.phone_number, payload.body, "gsm sms", payload.model_dump_json())
-    message = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
-    return MessageResponse(message=json.dumps(message))
+    result = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
+    if isinstance(result, str):
+        return MessageResponse(message=result)
+    return MessageResponse(message=f"SMS forwarded via Firebase to {len(result)} device(s).")
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
@@ -106,35 +110,21 @@ async def logs_page(request: Request):
     """Render the logs page (empty table; data loaded via AJAX)."""
     return templates.TemplateResponse("logs.html", {"request": request})
 
-@app.get("/api/logs/sms", response_class=JSONResponse)
+@app.get("/api/logs/sms", response_model=SmsLogsResponse)
 async def get_sms_logs():
-    """Return combined call + SMS logs as JSON."""
     sms_logs = sql_db.get_sms_logs()
-    data = [
-        {
-            "id": log[0],
-            "user": log[1],
-            "number": log[2],
-            "message": log[3],
-            "sms_type": log[4],
-            "timestamp": log[5]
-        } for log in sms_logs
-    ]
-    return JSONResponse(content={"data": data})
+    return SmsLogsResponse(data=[
+        SmsLogEntry(id=log[0], user=log[1], number=log[2], message=log[3], sms_type=log[4], timestamp=log[5])
+        for log in sms_logs
+    ])
 
-@app.get("/api/logs/call", response_class=JSONResponse)
+@app.get("/api/logs/call", response_model=CallLogsResponse)
 async def get_call_logs():
-    """Return combined call + SMS logs as JSON."""
     call_logs = sql_db.get_call_logs()
-    data = [
-        {
-            "id": log[0],
-            "user": log[1],
-            "number": log[2],
-            "timestamp": log[3]
-        } for log in call_logs
-    ]
-    return JSONResponse(content={"data": data})
+    return CallLogsResponse(data=[
+        CallLogEntry(id=log[0], user=log[1], number=log[2], timestamp=log[3])
+        for log in call_logs
+    ])
 
 @app.post("/upload_sa")
 async def upload_service_account_file(config_file: UploadFile = File(...)):
@@ -159,10 +149,9 @@ async def download_db():
     db_file = db.get_db_file_path()
     if Path(db_file).exists():
         return FileResponse(db_file, media_type='application/json', filename="users_db.json")
-    else:
-        return JSONResponse(status_code=404, content={"message": "DB file not found."})
+    raise HTTPException(status_code=404, detail="DB file not found.")
 
-@app.post("/sip/db")
+@app.post("/sip/db", response_model=MessageResponse)
 async def upload_db(db_file: UploadFile = File(...)):
     try:
         db_file_path = db.get_db_file_path()
@@ -171,9 +160,9 @@ async def upload_db(db_file: UploadFile = File(...)):
             await f.write(contents)
         db.load_data(True)
         message = await configure_asterisk()
-        return {"message": "Database restored successfully. " + message}
+        return MessageResponse(message="Database restored successfully. " + message)
     except Exception as e:
-        return JSONResponse(status_code=500, content={"message": f"Error: {str(e)}"})
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.post("/sip/restart", response_model=MessageResponse)
 async def restart_sip_server(payload: RestartPayload):

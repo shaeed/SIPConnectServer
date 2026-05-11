@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -60,3 +60,27 @@ class RestartPayload(BaseModel):
     username: str
     device_id: str = Field(
         None, description="Device id from which this restart request was sent.")
+
+class FirebaseResponse(BaseModel):
+    status: int
+    data: dict
+
+class SmsLogEntry(BaseModel):
+    id: int
+    user: str
+    number: str
+    message: str
+    sms_type: str
+    timestamp: str
+
+class CallLogEntry(BaseModel):
+    id: int
+    user: str
+    number: str
+    timestamp: str
+
+class SmsLogsResponse(BaseModel):
+    data: List[SmsLogEntry]
+
+class CallLogsResponse(BaseModel):
+    data: List[CallLogEntry]
