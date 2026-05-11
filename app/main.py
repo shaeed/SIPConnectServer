@@ -84,7 +84,7 @@ async def send_gsm_sms(payload: SmsPayload):
     result = await gsm.send_gsm_sms(payload.phone_number, payload.body, payload.username, payload.device_id)
     if isinstance(result, str):
         return MessageResponse(message=result)
-    return MessageResponse(message=f"SMS forwarded via Firebase to {len(result)} device(s).")
+    return MessageResponse(message=f"SMS forwarded via GSM/Firebase to {len(result)} device(s).")
 
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
