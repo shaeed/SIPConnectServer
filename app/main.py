@@ -49,6 +49,10 @@ async def get_user(username: str):
         voicemail_number=str(user['voicemail_id']) if user.get('voicemail_id') else None
     )
 
+@app.get("/api/tty-devices", response_model=List[str])
+async def get_tty_devices():
+    return await read_ttyUSB_devices()
+
 @app.get("/api/config", response_model=ConfigResponse)
 async def get_config():
     sa_file = db.get_service_account_file_path()

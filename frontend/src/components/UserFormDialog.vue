@@ -8,12 +8,23 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'saved', 'error'])
 
-const form   = ref(null)
-const saving = ref(false)
-const isEdit = computed(() => !!props.user)
+const form    = ref(null)
+const saving  = ref(false)
+const devices = ref([])
+const isEdit  = computed(() => !!props.user)
 
 const fields = ref({
   username: '', password: '', audio_interface: '', data_interface: '', voicemail_number: '',
+})
+
+watch(() => props.modelValue, async (open) => {
+  if (open) {
+    try {
+      devices.value = await api.getTtyDevices()
+    } catch {
+      devices.value = []
+    }
+  }
 })
 
 watch(() => props.user, (u) => {
@@ -74,19 +85,21 @@ async function save() {
             variant="outlined"
             class="mb-2"
           />
-          <v-text-field
+          <v-select
             v-model="fields.audio_interface"
             label="Audio Interface"
-            placeholder="/dev/ttyUSB1"
+            :items="devices"
             :rules="[rules.required]"
+            :loading="!devices.length"
             variant="outlined"
             class="mb-2"
           />
-          <v-text-field
+          <v-select
             v-model="fields.data_interface"
             label="Data Interface"
-            placeholder="/dev/ttyUSB2"
+            :items="devices"
             :rules="[rules.required]"
+            :loading="!devices.length"
             variant="outlined"
             class="mb-2"
           />
