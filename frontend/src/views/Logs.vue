@@ -37,7 +37,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <v-container fluid class="pa-6">
+  <v-container fluid class="pa-2 pa-sm-6">
     <v-alert v-if="error" type="error" class="mb-4">{{ error }}</v-alert>
 
     <v-card class="mb-6">
@@ -51,6 +51,7 @@ onMounted(async () => {
         :loading="loading"
         :items-per-page="20"
         :sort-by="[{ key: 'timestamp', order: 'desc' }]"
+        :mobile-breakpoint="600"
       />
     </v-card>
 
@@ -65,6 +66,7 @@ onMounted(async () => {
         :loading="loading"
         :items-per-page="20"
         :sort-by="[{ key: 'timestamp', order: 'desc' }]"
+        :mobile-breakpoint="600"
       />
     </v-card>
   </v-container>

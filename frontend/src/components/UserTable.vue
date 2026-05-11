@@ -84,6 +84,7 @@ onMounted(loadUsers)
       :items="users"
       :loading="loading"
       :items-per-page="10"
+      :mobile-breakpoint="600"
     >
       <template #item.actions="{ item }">
         <v-btn icon="mdi-pencil" variant="text" size="small" @click="openEdit(item)" />

@@ -4,7 +4,7 @@ import ConfigCard from '../components/ConfigCard.vue'
 </script>
 
 <template>
-  <v-container fluid class="pa-6">
+  <v-container fluid class="pa-2 pa-sm-6">
     <v-row>
       <v-col cols="12" lg="8">
         <UserTable />
