@@ -1,6 +1,6 @@
 import json
 import unittest
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 import app.main as main
 
@@ -111,6 +111,134 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         mock_db.user_exits.assert_called_once_with("sip_user")
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "User name not present."})
+
+    # ------------------------------------------------------------------
+    # GET /sip/users
+    # ------------------------------------------------------------------
+
+    @patch("app.main.db")
+    def test_list_users_success(self, mock_db):
+        mock_db.get_all_users.return_value = [
+            {
+                'username': 'alice',
+                'dongle_audio_interface': '/dev/ttyUSB1',
+                'dongle_data_interface': '/dev/ttyUSB2',
+                'voicemail_id': '100'
+            },
+            {
+                'username': 'bob',
+                'dongle_audio_interface': '/dev/ttyUSB3',
+                'dongle_data_interface': '/dev/ttyUSB4',
+                'voicemail_id': None
+            }
+        ]
+        response = client.get("/sip/users")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+        self.assertEqual(data[0], {
+            'username': 'alice',
+            'audio_interface': '/dev/ttyUSB1',
+            'data_interface': '/dev/ttyUSB2',
+            'voicemail_number': '100'
+        })
+        self.assertIsNone(data[1]['voicemail_number'])
+        self.assertNotIn('password', data[0])
+
+    @patch("app.main.db")
+    def test_list_users_empty(self, mock_db):
+        mock_db.get_all_users.return_value = []
+        response = client.get("/sip/users")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+    # ------------------------------------------------------------------
+    # GET /sip/users/{username}
+    # ------------------------------------------------------------------
+
+    @patch("app.main.db")
+    def test_get_user_success(self, mock_db):
+        mock_db.get_user_data.return_value = {
+            'username': 'alice',
+            'dongle_audio_interface': '/dev/ttyUSB1',
+            'dongle_data_interface': '/dev/ttyUSB2',
+            'voicemail_id': '100'
+        }
+        response = client.get("/sip/users/alice")
+        mock_db.get_user_data.assert_called_once_with("alice")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'username': 'alice',
+            'audio_interface': '/dev/ttyUSB1',
+            'data_interface': '/dev/ttyUSB2',
+            'voicemail_number': '100'
+        })
+        self.assertNotIn('password', response.json())
+
+    @patch("app.main.db")
+    def test_get_user_not_found(self, mock_db):
+        mock_db.get_user_data.return_value = None
+        response = client.get("/sip/users/nonexistent")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "User name not present."})
+
+    # ------------------------------------------------------------------
+    # GET /api/tty-devices
+    # ------------------------------------------------------------------
+
+    @patch("app.main.read_ttyUSB_devices", new_callable=AsyncMock)
+    def test_get_tty_devices(self, mock_read_tty):
+        mock_read_tty.return_value = ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/dummy"]
+        response = client.get("/api/tty-devices")
+        mock_read_tty.assert_awaited_once()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), ["/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/dummy"])
+
+    # ------------------------------------------------------------------
+    # GET /api/config
+    # ------------------------------------------------------------------
+
+    @patch("app.main.db")
+    def test_get_config_configured(self, mock_db):
+        mock_db.get_service_account_file_path.return_value = "uploads/service-account.json"
+        mock_db.get_project_id.return_value = "my-project-123"
+        response = client.get("/api/config")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"sa_configured": True, "project_id": "my-project-123"})
+
+    @patch("app.main.db")
+    def test_get_config_not_configured(self, mock_db):
+        mock_db.get_service_account_file_path.return_value = "uploads/dummy-service-account.json"
+        mock_db.get_project_id.return_value = "dummy-project-id"
+        response = client.get("/api/config")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"sa_configured": False, "project_id": ""})
+
+    # ------------------------------------------------------------------
+    # POST /upload_sa
+    # ------------------------------------------------------------------
+
+    @patch("app.main.db")
+    @patch("aiofiles.open")
+    def test_upload_sa_success(self, mock_aiofiles_open, mock_db):
+        mock_file = AsyncMock()
+        mock_cm = MagicMock()
+        mock_cm.__aenter__ = AsyncMock(return_value=mock_file)
+        mock_cm.__aexit__ = AsyncMock(return_value=None)
+        mock_aiofiles_open.return_value = mock_cm
+
+        sa_content = json.dumps({"project_id": "test-project-id", "type": "service_account"})
+        with patch("pathlib.Path.mkdir"):
+            response = client.post(
+                "/upload_sa",
+                files={"config_file": ("service-account.json", sa_content.encode(), "application/json")}
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"message": "Service account uploaded successfully."})
+        mock_db.set_project_id.assert_called_once_with("test-project-id")
+        mock_db.set_service_account_file_path.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

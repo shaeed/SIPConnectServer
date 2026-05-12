@@ -4,14 +4,15 @@ from typing import List
 
 import aiofiles
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Query
-from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
 import app.database_sqlite as sql_db
 from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayload,
                         MessageResponse, DeviceResponse, FirebaseResponse,
-                        SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse)
+                        SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse,
+                        UserResponse, ConfigResponse)
 from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
@@ -25,6 +26,41 @@ TEMPLATES_DIR = BASE_DIR / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 # interfaces = ["/dev/ttyUSB1", "/dev/ttyUSB2", "/dev/ttyUSB3", "/dev/ttyUSB4", "/dev/ttyUSB5"]
+
+@app.get("/sip/users", response_model=List[UserResponse])
+async def list_users():
+    users = db.get_all_users()
+    return [UserResponse(
+        username=u['username'],
+        audio_interface=u['dongle_audio_interface'],
+        data_interface=u['dongle_data_interface'],
+        voicemail_number=str(u['voicemail_id']) if u.get('voicemail_id') else None
+    ) for u in users]
+
+@app.get("/sip/users/{username}", response_model=UserResponse)
+async def get_user(username: str):
+    user = db.get_user_data(username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User name not present.")
+    return UserResponse(
+        username=user['username'],
+        audio_interface=user['dongle_audio_interface'],
+        data_interface=user['dongle_data_interface'],
+        voicemail_number=str(user['voicemail_id']) if user.get('voicemail_id') else None
+    )
+
+@app.get("/api/tty-devices", response_model=List[str])
+async def get_tty_devices():
+    return await read_ttyUSB_devices()
+
+@app.get("/api/config", response_model=ConfigResponse)
+async def get_config():
+    sa_file = db.get_service_account_file_path()
+    project_id = db.get_project_id()
+    return ConfigResponse(
+        sa_configured='dummy' not in sa_file,
+        project_id='' if project_id == 'dummy-project-id' else project_id
+    )
 
 @app.post("/sip/users", response_model=MessageResponse)
 async def create_user(user: User):
@@ -126,23 +162,19 @@ async def get_call_logs():
         for log in call_logs
     ])
 
-@app.post("/upload_sa")
+@app.post("/upload_sa", response_model=MessageResponse)
 async def upload_service_account_file(config_file: UploadFile = File(...)):
-    # Read the uploaded file content
     contents = await config_file.read()
     upload_dir = Path("uploads")
-    upload_dir.mkdir(exist_ok=True)  # create folder if not exists
+    upload_dir.mkdir(exist_ok=True)
     save_path = upload_dir / 'service-account.json'
 
     async with aiofiles.open(save_path, "wb") as f:
         await f.write(contents)
-    # Update db
     sa_dc = json.loads(contents.decode())
     db.set_project_id(sa_dc["project_id"])
     db.set_service_account_file_path(save_path.as_posix())
-
-    print(f"Config file saved to: {save_path}")
-    return RedirectResponse("/", status_code=303)
+    return MessageResponse(message="Service account uploaded successfully.")
 
 @app.get("/sip/db")
 async def download_db():
