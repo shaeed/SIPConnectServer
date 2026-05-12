@@ -1,4 +1,5 @@
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List
 
@@ -13,14 +14,19 @@ from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayl
                         MessageResponse, DeviceResponse, FirebaseResponse,
                         SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse,
                         UserResponse, ConfigResponse)
-from app.services.asterisk import restart_asterisk
+from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
 from app.services import gsm
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await configure_asterisk()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
