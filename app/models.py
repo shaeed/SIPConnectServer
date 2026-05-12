@@ -84,3 +84,13 @@ class SmsLogsResponse(BaseModel):
 
 class CallLogsResponse(BaseModel):
     data: List[CallLogEntry]
+
+class UserResponse(BaseModel):
+    username: str
+    audio_interface: str
+    data_interface: str
+    voicemail_number: Optional[str]
+
+class ConfigResponse(BaseModel):
+    sa_configured: bool
+    project_id: str
