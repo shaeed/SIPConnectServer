@@ -4,8 +4,7 @@ import { api } from '../api'
 
 const config     = ref({ sa_configured: false, project_id: '' })
 const saFile     = ref(null)
-const dbFile     = ref(null)
-const uploading  = ref({ sa: false, db: false })
+const uploading  = ref(false)
 const snackbar   = ref({ show: false, message: '', color: 'success' })
 
 onMounted(async () => {
@@ -18,7 +17,7 @@ onMounted(async () => {
 
 async function uploadSA() {
   if (!saFile.value) return
-  uploading.value.sa = true
+  uploading.value = true
   try {
     const form = new FormData()
     form.append('config_file', saFile.value)
@@ -29,23 +28,7 @@ async function uploadSA() {
   } catch (e) {
     showSnackbar(e.message, 'error')
   } finally {
-    uploading.value.sa = false
-  }
-}
-
-async function uploadDB() {
-  if (!dbFile.value) return
-  uploading.value.db = true
-  try {
-    const form = new FormData()
-    form.append('db_file', dbFile.value)
-    const res = await api.uploadDB(form)
-    showSnackbar(res.message)
-    dbFile.value = null
-  } catch (e) {
-    showSnackbar(e.message, 'error')
-  } finally {
-    uploading.value.db = false
+    uploading.value = false
   }
 }
 
@@ -88,45 +71,10 @@ function showSnackbar(message, color = 'success') {
       <v-btn
         color="primary"
         variant="flat"
-        :loading="uploading.sa"
+        :loading="uploading"
         :disabled="!saFile"
         @click="uploadSA"
       >Upload</v-btn>
-    </v-card-actions>
-  </v-card>
-
-  <v-card>
-    <v-card-title>
-      <v-icon start>mdi-database</v-icon>
-      Database
-    </v-card-title>
-    <v-card-text>
-      <v-btn
-        variant="outlined"
-        prepend-icon="mdi-download"
-        class="mb-4"
-        @click="api.downloadDB()"
-      >Download Backup</v-btn>
-
-      <v-file-input
-        v-model="dbFile"
-        label="Restore from backup"
-        accept=".json"
-        prepend-icon="mdi-restore"
-        variant="outlined"
-        density="compact"
-        hide-details
-      />
-    </v-card-text>
-    <v-card-actions>
-      <v-spacer />
-      <v-btn
-        color="warning"
-        variant="flat"
-        :loading="uploading.db"
-        :disabled="!dbFile"
-        @click="uploadDB"
-      >Restore</v-btn>
     </v-card-actions>
   </v-card>
 

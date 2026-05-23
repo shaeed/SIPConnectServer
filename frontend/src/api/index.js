@@ -30,8 +30,6 @@ export const api = {
   getConfig:    ()       => request('GET', '/api/config'),
   getTtyDevices: ()      => request('GET', '/api/tty-devices'),
   uploadSA:     (form)   => upload('/upload_sa', form),
-  downloadDB:   ()       => { window.location.href = '/sip/db' },
-  uploadDB:     (form)   => upload('/sip/db', form),
 
   // Logs
   getCallLogs:  () => request('GET', '/api/logs/call'),
