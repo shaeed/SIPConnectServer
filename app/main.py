@@ -1,10 +1,11 @@
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List
 
 import aiofiles
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File, Query
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 import app.database as db
@@ -20,7 +21,12 @@ from app.users import add_user
 from app.services import gsm
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await configure_asterisk()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -176,25 +182,6 @@ async def upload_service_account_file(config_file: UploadFile = File(...)):
     db.set_service_account_file_path(save_path.as_posix())
     return MessageResponse(message="Service account uploaded successfully.")
 
-@app.get("/sip/db")
-async def download_db():
-    db_file = db.get_db_file_path()
-    if Path(db_file).exists():
-        return FileResponse(db_file, media_type='application/json', filename="users_db.json")
-    raise HTTPException(status_code=404, detail="DB file not found.")
-
-@app.post("/sip/db", response_model=MessageResponse)
-async def upload_db(db_file: UploadFile = File(...)):
-    try:
-        db_file_path = db.get_db_file_path()
-        contents = await db_file.read()
-        async with aiofiles.open(db_file_path, "wb") as f:
-            await f.write(contents)
-        db.load_data(True)
-        message = await configure_asterisk()
-        return MessageResponse(message="Database restored successfully. " + message)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 @app.post("/sip/restart", response_model=MessageResponse)
 async def restart_sip_server(payload: RestartPayload):
