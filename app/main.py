@@ -14,7 +14,7 @@ from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayl
                         MessageResponse, DeviceResponse, FirebaseResponse,
                         SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse,
                         UserResponse, ConfigResponse)
-from app.services.asterisk import restart_asterisk
+from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
