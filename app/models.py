@@ -44,7 +44,7 @@ class DeviceResponse(BaseModel):
 class CallPayload(BaseModel):
     username: str
     phone_number: str
-    type: Optional[str] = None
+    type: Optional[str] = None # call, missed
 
 class SmsPayload(BaseModel):
     username: str
