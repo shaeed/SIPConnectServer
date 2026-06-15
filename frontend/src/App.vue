@@ -12,6 +12,7 @@ const route = useRoute()
       </v-app-bar-title>
       <v-btn variant="text" to="/" :active="route.path === '/'">Dashboard</v-btn>
       <v-btn variant="text" to="/logs" :active="route.path === '/logs'">Logs</v-btn>
+      <v-btn variant="text" to="/notifications" :active="route.path === '/notifications'">Notifications</v-btn>
     </v-app-bar>
 
     <v-main class="bg-grey-lighten-4">

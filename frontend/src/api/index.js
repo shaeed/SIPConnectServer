@@ -34,4 +34,8 @@ export const api = {
   // Logs
   getCallLogs:  () => request('GET', '/api/logs/call'),
   getSmsLogs:   () => request('GET', '/api/logs/sms'),
+
+  // Web Push
+  getVapidPublicKey: ()   => request('GET',  '/api/vapid-public-key'),
+  registerWebPush:   (data) => request('POST', '/sip/client/register/web-push', data),
 }
