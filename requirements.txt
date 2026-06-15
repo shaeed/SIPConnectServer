@@ -9,3 +9,4 @@ pydantic~=2.11.7
 aiofiles~=24.1.0
 jinja2
 python-multipart
+pywebpush~=2.0.0

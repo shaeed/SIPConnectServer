@@ -4,6 +4,10 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
+from cryptography.hazmat.primitives import serialization
+from py_vapid import Vapid
+from py_vapid.utils import b64urlencode
+
 # For this simple application, lets use file as database
 BASE_DIR = Path(__file__).resolve().parent
 # DB_FILE = os.path.join('app', 'data.json')
@@ -89,7 +93,7 @@ def get_fcm_tokens(username: str) -> List[str]:
     user_data = get_user_data(username)
     if not user_data.get('devices'):
         return []
-    tokens = [x['fcm_token'] for x in user_data['devices'].values()]
+    tokens = [x['fcm_token'] for x in user_data['devices'].values() if x.get('fcm_token')]
     return tokens
 
 def get_fcm_token(username: str, device_id: str) -> Optional[str]:
@@ -103,8 +107,43 @@ def get_fcm_tokens_with_device_id(username: str) -> dict:
     user_data = get_user_data(username)
     if not user_data.get('devices'):
         return {}
-    tokens = {x['device_id']: x['fcm_token'] for x in user_data['devices'].values()}
+    tokens = {x['device_id']: x['fcm_token'] for x in user_data['devices'].values() if x.get('fcm_token')}
     return tokens
+
+def update_web_subscription(username: str, device_id: str, subscription: dict) -> str:
+    user_data = get_user_data(username)
+    if not user_data:
+        return f"No device found with username '{username}'."
+
+    if not user_data.get('devices'):
+        user_data['devices'] = {}
+    user_data['devices'].setdefault(device_id, {'device_id': device_id})
+    user_data['devices'][device_id]['web_subscription'] = subscription
+    save_data()
+    return f"Web push subscription updated for user '{username}'."
+
+def get_web_subscriptions(username: str) -> List[dict]:
+    user_data = get_user_data(username)
+    if not user_data or not user_data.get('devices'):
+        return []
+    return [x['web_subscription'] for x in user_data['devices'].values() if x.get('web_subscription')]
+
+def get_web_subscriptions_with_device_id(username: str) -> dict:
+    user_data = get_user_data(username)
+    if not user_data or not user_data.get('devices'):
+        return {}
+    return {
+        x['device_id']: x['web_subscription']
+        for x in user_data['devices'].values() if x.get('web_subscription')
+    }
+
+def remove_device(username: str, device_id: str) -> str:
+    user_data = get_user_data(username)
+    if not user_data or not user_data.get('devices') or device_id not in user_data['devices']:
+        return f"No device '{device_id}' found for user '{username}'."
+    del user_data['devices'][device_id]
+    save_data()
+    return f"Device '{device_id}' removed for user '{username}'."
 
 def update_oauth2_token(username: str, new_oauth2_token: str, expiry: int):
     user_data = get_user_data(username)
@@ -143,6 +182,25 @@ def get_service_account_file_path() -> str:
 def set_service_account_file_path(sa_path: str):
     _DB_FULL['app-config']['service_account_file'] = sa_path
     save_data()
+
+def get_vapid_keys() -> dict:
+    load_data()
+    config = _DB_FULL.setdefault('app-config', {})
+    if not config.get('vapid_private_key') or not config.get('vapid_public_key'):
+        vapid = Vapid()
+        vapid.generate_keys()
+        private_raw = vapid.private_key.private_numbers().private_value.to_bytes(32, 'big')
+        public_raw = vapid.public_key.public_bytes(
+            serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
+        config['vapid_private_key'] = b64urlencode(private_raw)
+        config['vapid_public_key'] = b64urlencode(public_raw)
+        config.setdefault('vapid_subject', 'mailto:admin@example.com')
+        save_data()
+    return {
+        'private_key': config['vapid_private_key'],
+        'public_key': config['vapid_public_key'],
+        'subject': config.get('vapid_subject', 'mailto:admin@example.com'),
+    }
 
 def add_dummy_user():
     data = get_all_users()

@@ -6,3 +6,4 @@ class Const:
     DEV_DUMMY = "dummy"
     DEV_ANDROID = "android"
     DEV_DONGLE_HUAWEI = "huawei dongle"
+    DEV_WEB_PUSH = "web browser"

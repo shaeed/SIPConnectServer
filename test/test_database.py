@@ -60,6 +60,12 @@ class TestDatabase(unittest.TestCase):
         tokens = db.get_fcm_tokens('user1')
         self.assertEqual(tokens, [])
 
+    def test_get_fcm_tokens_ignores_web_push_only_devices(self):
+        subscription = {"endpoint": "https://push.example.com/1", "keys": {"p256dh": "p256", "auth": "auth"}}
+        db.update_web_subscription("user1", "web-dev1", subscription)
+        self.assertEqual(db.get_fcm_tokens("user1"), ["test_fcm_token"])
+        self.assertEqual(db.get_fcm_tokens_with_device_id("user1"), {"dev1": "test_fcm_token"})
+
     def test_get_fcm_token(self):
         # device exists
         token = db.get_fcm_token('user1', 'dev1')
@@ -132,6 +138,47 @@ class TestDatabase(unittest.TestCase):
         db.set_service_account_file_path('new_file_path.json')
         file_path = db.get_service_account_file_path()
         self.assertEqual(file_path, 'new_file_path.json')
+
+    def test_update_web_subscription(self):
+        subscription = {"endpoint": "https://push.example.com/1", "keys": {"p256dh": "p256", "auth": "auth"}}
+        resp = db.update_web_subscription("user1", "web-dev1", subscription)
+        self.assertTrue(resp.startswith("Web push subscription updated"))
+        self.assertEqual(db.get_web_subscriptions("user1"), [subscription])
+
+    def test_update_web_subscription_user_not_found(self):
+        resp = db.update_web_subscription("unknown", "web-dev1", {})
+        self.assertEqual(resp, "No device found with username 'unknown'.")
+
+    def test_get_web_subscriptions_none(self):
+        self.assertEqual(db.get_web_subscriptions("user1"), [])
+
+    def test_get_web_subscriptions_with_device_id(self):
+        subscription = {"endpoint": "https://push.example.com/1", "keys": {"p256dh": "p256", "auth": "auth"}}
+        db.update_web_subscription("user1", "web-dev1", subscription)
+        self.assertEqual(db.get_web_subscriptions_with_device_id("user1"), {"web-dev1": subscription})
+
+    def test_remove_device(self):
+        subscription = {"endpoint": "https://push.example.com/1", "keys": {"p256dh": "p256", "auth": "auth"}}
+        db.update_web_subscription("user1", "web-dev1", subscription)
+        resp = db.remove_device("user1", "web-dev1")
+        self.assertEqual(resp, "Device 'web-dev1' removed for user 'user1'.")
+        self.assertEqual(db.get_web_subscriptions("user1"), [])
+
+    def test_remove_device_not_found(self):
+        resp = db.remove_device("user1", "unknown-dev")
+        self.assertEqual(resp, "No device 'unknown-dev' found for user 'user1'.")
+
+    def test_get_vapid_keys_generates_and_persists(self):
+        keys = db.get_vapid_keys()
+        self.assertIn("private_key", keys)
+        self.assertIn("public_key", keys)
+        self.assertEqual(keys["subject"], "mailto:admin@example.com")
+        self.assertEqual(db._DB_FULL['app-config']['vapid_private_key'], keys["private_key"])
+
+    def test_get_vapid_keys_cached(self):
+        first = db.get_vapid_keys()
+        second = db.get_vapid_keys()
+        self.assertEqual(first, second)
 
 if __name__ == '__main__':
     unittest.main()

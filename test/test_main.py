@@ -40,13 +40,58 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual({"fcm_token": "mock_token"}, response.json())
 
+    @patch("app.main.db")
+    def test_get_vapid_public_key(self, mock_db):
+        mock_db.get_vapid_keys.return_value = {"public_key": "mock_public_key", "private_key": "x", "subject": "y"}
+        response = client.get("/api/vapid-public-key")
+
+        mock_db.get_vapid_keys.assert_called_once()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({"public_key": "mock_public_key"}, response.json())
+
+    @patch("app.main.db")
+    def test_register_web_push(self, mock_db):
+        mock_db.user_exits.return_value = True
+        mock_db.update_web_subscription.return_value = "mocked fun called"
+        payload = {
+            "device_id": "web-dev1",
+            "username": "sip_user",
+            "subscription": {
+                "endpoint": "https://push.example.com/1",
+                "keys": {"p256dh": "p256", "auth": "auth"}
+            }
+        }
+        response = client.post("/sip/client/register/web-push", json=payload)
+
+        mock_db.update_web_subscription.assert_called_once_with("sip_user", "web-dev1", payload["subscription"])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({"message": "mocked fun called"}, response.json())
+
+    @patch("app.main.db")
+    def test_register_web_push_user_not_found(self, mock_db):
+        mock_db.user_exits.return_value = False
+        payload = {
+            "device_id": "web-dev1",
+            "username": "sip_user",
+            "subscription": {
+                "endpoint": "https://push.example.com/1",
+                "keys": {"p256dh": "p256", "auth": "auth"}
+            }
+        }
+        response = client.post("/sip/client/register/web-push", json=payload)
+
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "User name not present."})
+
     @patch("app.main.sql_db")
     @patch("app.main.db")
+    @patch("app.main.push_web_call_alert", new_callable=AsyncMock)
     @patch("app.main.push_call_alert", new_callable=AsyncMock)
-    def test_alert_client_on_call_success(self, mock_push_call_alert, mock_db, mock_sql_db):
+    def test_alert_client_on_call_success(self, mock_push_call_alert, mock_push_web_call_alert, mock_db, mock_sql_db):
         mock_db.user_exits.return_value = True
         mock_sql_db.insert_call_log.return_value = None
         mock_push_call_alert.return_value = [{"status": 200, "data": {"name": "projects/test/messages/123"}}]
+        mock_push_web_call_alert.return_value = [{"status": 201, "data": {"message": "Push sent"}}]
         payload = {
             "username": "sip_user",
             "phone_number": "+1234567890",
@@ -58,8 +103,12 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
                                                             json.dumps(payload, indent=None, separators=(',', ':')))
         mock_db.user_exits.assert_called_once_with("sip_user")
         mock_push_call_alert.assert_awaited_once_with("sip_user", "+1234567890", payload)
+        mock_push_web_call_alert.assert_awaited_once_with("sip_user", "+1234567890", payload)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [{"status": 200, "data": {"name": "projects/test/messages/123"}}])
+        self.assertEqual(response.json(), [
+            {"status": 200, "data": {"name": "projects/test/messages/123"}},
+            {"status": 201, "data": {"message": "Push sent"}}
+        ])
 
     @patch("app.main.db")
     def test_alert_client_on_call_user_not_found(self, mock_db):
@@ -77,11 +126,13 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.main.sql_db")
     @patch("app.main.db")
+    @patch("app.main.push_web_sms_alert", new_callable=AsyncMock)
     @patch("app.main.push_sms_alert", new_callable=AsyncMock)
-    def test_alert_client_on_sms_success(self, mock_push_sms_alert, mock_db, mock_sql_db):
+    def test_alert_client_on_sms_success(self, mock_push_sms_alert, mock_push_web_sms_alert, mock_db, mock_sql_db):
         mock_db.user_exits.return_value = True
         mock_sql_db.insert_sms_log.return_value = None
         mock_push_sms_alert.return_value = [{"status": 200, "data": {"name": "projects/test/messages/456"}}]
+        mock_push_web_sms_alert.return_value = [{"status": 201, "data": {"message": "Push sent"}}]
         payload = {
             "username": "sip_user",
             "phone_number": "+1234567890",
@@ -95,8 +146,12 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
                                                            json.dumps(payload, indent=None, separators=(',', ':')))
         mock_db.user_exits.assert_called_once_with("sip_user")
         mock_push_sms_alert.assert_awaited_once_with("sip_user", "+1234567890", "Hello!", None)
+        mock_push_web_sms_alert.assert_awaited_once_with("sip_user", "+1234567890", "Hello!", None)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), [{"status": 200, "data": {"name": "projects/test/messages/456"}}])
+        self.assertEqual(response.json(), [
+            {"status": 200, "data": {"name": "projects/test/messages/456"}},
+            {"status": 201, "data": {"message": "Push sent"}}
+        ])
 
     @patch("app.main.db")
     def test_alert_client_on_sms_user_not_found(self, mock_db):
