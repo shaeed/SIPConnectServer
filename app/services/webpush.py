@@ -1,9 +1,7 @@
 import asyncio
 import json
 from datetime import datetime, timezone
-
 from pywebpush import webpush, WebPushException
-
 from app.database import (get_vapid_keys, get_web_subscriptions_with_device_id, remove_device)
 
 
