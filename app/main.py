@@ -13,9 +13,10 @@ import app.database_sqlite as sql_db
 from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayload,
                         MessageResponse, DeviceResponse, FirebaseResponse,
                         SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse,
-                        UserResponse, ConfigResponse)
+                        UserResponse, ConfigResponse, WebPushTokenPayload, VapidKeyResponse)
 from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
+from app.services.webpush import push_web_call_alert, push_web_sms_alert
 from app.tty_devices import read_ttyUSB_devices
 from app.users import add_user
 from app.services import gsm
@@ -102,12 +103,25 @@ async def get_device_token(username: str = Query(..., description="The username 
     token = db.get_fcm_token(username, device_id) or ""
     return DeviceResponse(fcm_token=token)
 
+@app.get("/api/vapid-public-key", response_model=VapidKeyResponse)
+async def get_vapid_public_key():
+    return VapidKeyResponse(public_key=db.get_vapid_keys()["public_key"])
+
+@app.post("/sip/client/register/web-push", response_model=MessageResponse)
+async def register_web_push(payload: WebPushTokenPayload):
+    if not db.user_exits(payload.username):
+        raise HTTPException(status_code=404, detail="User name not present.")
+    message = db.update_web_subscription(payload.username, payload.device_id, payload.subscription.model_dump())
+    return MessageResponse(message=message)
+
 @app.post("/sip/alert/call", response_model=List[FirebaseResponse])
 async def alert_client_on_call(payload: CallPayload):
     if not db.user_exits(payload.username):
         raise HTTPException(status_code=404, detail="User name not present.")
     sql_db.insert_call_log(payload.username, payload.phone_number, payload.model_dump_json())
-    return await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
+    fcm_results = await push_call_alert(payload.username, payload.phone_number, payload.__dict__)
+    web_results = await push_web_call_alert(payload.username, payload.phone_number, payload.__dict__)
+    return fcm_results + web_results
 
 @app.post("/sip/alert/sms", response_model=List[FirebaseResponse])
 async def alert_client_on_sms(payload: SmsPayload):
@@ -115,7 +129,9 @@ async def alert_client_on_sms(payload: SmsPayload):
         raise HTTPException(status_code=404, detail="User name not present.")
     sql_db.insert_sms_log(
         payload.username, payload.phone_number, payload.body, "alert sms", payload.model_dump_json())
-    return await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
+    fcm_results = await push_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
+    web_results = await push_web_sms_alert(payload.username, payload.phone_number, payload.body, payload.device_id)
+    return fcm_results + web_results
 
 @app.post("/gsm/sms", response_model=MessageResponse)
 async def send_gsm_sms(payload: SmsPayload):

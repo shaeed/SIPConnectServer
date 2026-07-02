@@ -41,6 +41,22 @@ class TokenPayload(BaseModel):
 class DeviceResponse(BaseModel):
     fcm_token: str
 
+class PushSubscriptionKeys(BaseModel):
+    p256dh: str
+    auth: str
+
+class WebPushSubscription(BaseModel):
+    endpoint: str
+    keys: PushSubscriptionKeys
+
+class WebPushTokenPayload(BaseModel):
+    device_id: str
+    subscription: WebPushSubscription
+    username: str
+
+class VapidKeyResponse(BaseModel):
+    public_key: str
+
 class CallPayload(BaseModel):
     username: str
     phone_number: str
