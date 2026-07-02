@@ -172,7 +172,7 @@ class TestDatabase(unittest.TestCase):
         keys = db.get_vapid_keys()
         self.assertIn("private_key", keys)
         self.assertIn("public_key", keys)
-        self.assertEqual(keys["subject"], "mailto:admin@example.com")
+        self.assertEqual(keys["subject"], "mailto:shaeed.dev@gmail.com")
         self.assertEqual(db._DB_FULL['app-config']['vapid_private_key'], keys["private_key"])
 
     def test_get_vapid_keys_cached(self):

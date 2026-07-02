@@ -3,10 +3,12 @@ uvicorn
 aiohttp~=3.12.13
 google-auth
 asyncio~=3.4.3
-requests
+requests~=2.34.2
 httpx
 pydantic~=2.11.7
 aiofiles~=24.1.0
 jinja2
 python-multipart
 pywebpush~=2.0.0
+
+cryptography~=49.0.0
