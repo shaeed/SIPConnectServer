@@ -194,12 +194,12 @@ def get_vapid_keys() -> dict:
             serialization.Encoding.X962, serialization.PublicFormat.UncompressedPoint)
         config['vapid_private_key'] = b64urlencode(private_raw)
         config['vapid_public_key'] = b64urlencode(public_raw)
-        config.setdefault('vapid_subject', 'mailto:admin@example.com')
+        config.setdefault('vapid_subject', 'mailto:shaeed.dev@gmail.com')
         save_data()
     return {
         'private_key': config['vapid_private_key'],
         'public_key': config['vapid_public_key'],
-        'subject': config.get('vapid_subject', 'mailto:admin@example.com'),
+        'subject': config['vapid_subject'],
     }
 
 def add_dummy_user():

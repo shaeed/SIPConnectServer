@@ -15,6 +15,10 @@
         "device_id": {
           "device_id": "device_id_used_as_key",
           "fcm_token": "test_fcm_token"
+        },
+        "device_id_2": {
+          "device_id": "device_id_2_used_as_key",
+          "web_subscription": "test_web_subscription_token"
         }
       },
       "oauth2_token": "test_token",
