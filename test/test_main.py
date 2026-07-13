@@ -83,6 +83,25 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json(), {"detail": "User name not present."})
 
+    @patch("app.main.db")
+    def test_unregister_device(self, mock_db):
+        mock_db.user_exits.return_value = True
+        mock_db.remove_device.return_value = "Device 'abc123' removed for user 'sip_user'."
+        response = client.delete("/sip/client/sip_user/abc123")
+
+        mock_db.remove_device.assert_called_once_with("sip_user", "abc123")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual({"message": "Device 'abc123' removed for user 'sip_user'."}, response.json())
+
+    @patch("app.main.db")
+    def test_unregister_device_user_not_found(self, mock_db):
+        mock_db.user_exits.return_value = False
+        response = client.delete("/sip/client/sip_user/abc123")
+
+        mock_db.remove_device.assert_not_called()
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "User name not present."})
+
     @patch("app.main.sql_db")
     @patch("app.main.db")
     @patch("app.main.push_web_call_alert", new_callable=AsyncMock)
