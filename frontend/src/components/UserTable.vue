@@ -2,13 +2,16 @@
 import { ref, onMounted } from 'vue'
 import { api } from '../api'
 import UserFormDialog from './UserFormDialog.vue'
+import DeviceListDialog from './DeviceListDialog.vue'
 
 const users          = ref([])
 const loading        = ref(true)
 const formDialog     = ref(false)
 const deleteDialog   = ref(false)
+const devicesDialog  = ref(false)
 const editingUser    = ref(null)
 const deletingUser   = ref('')
+const devicesUser    = ref('')
 const snackbar       = ref({ show: false, message: '', color: 'success' })
 
 const headers = [
@@ -43,6 +46,11 @@ function openEdit(user) {
 function confirmDelete(username) {
   deletingUser.value = username
   deleteDialog.value = true
+}
+
+function openDevices(username) {
+  devicesUser.value = username
+  devicesDialog.value = true
 }
 
 async function deleteUser() {
@@ -87,6 +95,7 @@ onMounted(loadUsers)
       :mobile-breakpoint="600"
     >
       <template #item.actions="{ item }">
+        <v-btn icon="mdi-cellphone-link" variant="text" size="small" @click="openDevices(item.username)" />
         <v-btn icon="mdi-pencil" variant="text" size="small" @click="openEdit(item)" />
         <v-btn icon="mdi-delete" variant="text" size="small" color="error" @click="confirmDelete(item.username)" />
       </template>
@@ -97,6 +106,12 @@ onMounted(loadUsers)
     v-model="formDialog"
     :user="editingUser"
     @saved="onSaved"
+    @error="showSnackbar($event, 'error')"
+  />
+
+  <DeviceListDialog
+    v-model="devicesDialog"
+    :username="devicesUser"
     @error="showSnackbar($event, 'error')"
   />
 
