@@ -114,6 +114,13 @@ async def register_web_push(payload: WebPushTokenPayload):
     message = db.update_web_subscription(payload.username, payload.device_id, payload.subscription.model_dump())
     return MessageResponse(message=message)
 
+@app.delete("/sip/client/{username}/{device_id}", response_model=MessageResponse)
+async def unregister_device(username: str, device_id: str):
+    if not db.user_exits(username):
+        raise HTTPException(status_code=404, detail="User name not present.")
+    message = db.remove_device(username, device_id)
+    return MessageResponse(message=message)
+
 @app.post("/sip/alert/call", response_model=List[FirebaseResponse])
 async def alert_client_on_call(payload: CallPayload):
     if not db.user_exits(payload.username):
