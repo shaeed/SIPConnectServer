@@ -11,7 +11,8 @@ const route = useRoute()
         SIPConnect
       </v-app-bar-title>
       <v-btn variant="text" to="/" :active="route.path === '/'">Dashboard</v-btn>
-      <v-btn variant="text" to="/logs" :active="route.path === '/logs'">Logs</v-btn>
+      <v-btn variant="text" to="/logs/calls" :active="route.path === '/logs/calls'">Call Logs</v-btn>
+      <v-btn variant="text" to="/logs/sms" :active="route.path === '/logs/sms'">SMS Logs</v-btn>
       <v-btn variant="text" to="/notifications" :active="route.path === '/notifications'">Notifications</v-btn>
     </v-app-bar>
 
