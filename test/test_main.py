@@ -257,6 +257,40 @@ class TestMain(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response.json(), {"detail": "User name not present."})
 
     # ------------------------------------------------------------------
+    # GET /sip/users/{username}/devices
+    # ------------------------------------------------------------------
+
+    @patch("app.main.db")
+    def test_get_user_devices_success(self, mock_db):
+        mock_db.get_user_data.return_value = {
+            'username': 'alice',
+            'devices': {
+                'dev1': {'device_id': 'dev1', 'fcm_token': 'token_xyz'},
+                'dev2': {'device_id': 'dev2', 'web_subscription': {'endpoint': 'https://push.example.com/1'}}
+            }
+        }
+        response = client.get("/sip/users/alice/devices")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [
+            {'device_id': 'dev1', 'fcm_registered': True, 'web_push_registered': False},
+            {'device_id': 'dev2', 'fcm_registered': False, 'web_push_registered': True}
+        ])
+
+    @patch("app.main.db")
+    def test_get_user_devices_empty(self, mock_db):
+        mock_db.get_user_data.return_value = {'username': 'alice'}
+        response = client.get("/sip/users/alice/devices")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [])
+
+    @patch("app.main.db")
+    def test_get_user_devices_user_not_found(self, mock_db):
+        mock_db.get_user_data.return_value = None
+        response = client.get("/sip/users/nonexistent/devices")
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.json(), {"detail": "User name not present."})
+
+    # ------------------------------------------------------------------
     # GET /api/tty-devices
     # ------------------------------------------------------------------
 

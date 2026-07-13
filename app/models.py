@@ -110,3 +110,8 @@ class UserResponse(BaseModel):
 class ConfigResponse(BaseModel):
     sa_configured: bool
     project_id: str
+
+class DeviceInfo(BaseModel):
+    device_id: str
+    fcm_registered: bool
+    web_push_registered: bool

@@ -13,7 +13,8 @@ import app.database_sqlite as sql_db
 from app.models import (User, TokenPayload, CallPayload, SmsPayload, RestartPayload,
                         MessageResponse, DeviceResponse, FirebaseResponse,
                         SmsLogEntry, CallLogEntry, SmsLogsResponse, CallLogsResponse,
-                        UserResponse, ConfigResponse, WebPushTokenPayload, VapidKeyResponse)
+                        UserResponse, ConfigResponse, WebPushTokenPayload, VapidKeyResponse,
+                        DeviceInfo)
 from app.services.asterisk import restart_asterisk, configure_asterisk
 from app.services.firebase import push_call_alert, push_sms_alert
 from app.services.webpush import push_web_call_alert, push_web_sms_alert
@@ -120,6 +121,21 @@ async def unregister_device(username: str, device_id: str):
         raise HTTPException(status_code=404, detail="User name not present.")
     message = db.remove_device(username, device_id)
     return MessageResponse(message=message)
+
+@app.get("/sip/users/{username}/devices", response_model=List[DeviceInfo])
+async def get_user_devices(username: str):
+    user = db.get_user_data(username)
+    if not user:
+        raise HTTPException(status_code=404, detail="User name not present.")
+    devices = user.get('devices') or {}
+    return [
+        DeviceInfo(
+            device_id=device_id,
+            fcm_registered=bool(device.get('fcm_token')),
+            web_push_registered=bool(device.get('web_subscription'))
+        )
+        for device_id, device in devices.items()
+    ]
 
 @app.post("/sip/alert/call", response_model=List[FirebaseResponse])
 async def alert_client_on_call(payload: CallPayload):
