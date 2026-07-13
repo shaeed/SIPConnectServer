@@ -26,6 +26,10 @@ export const api = {
   updateUser:   (username, data) => request('PUT',    `/sip/users/${username}`, data),
   deleteUser:   (username)       => request('DELETE', `/sip/users/${username}`),
 
+  // Devices
+  getUserDevices: (username)             => request('GET',    `/sip/users/${username}/devices`),
+  removeDevice:   (username, deviceId)   => request('DELETE', `/sip/client/${username}/${deviceId}`),
+
   // Config
   getConfig:    ()       => request('GET', '/api/config'),
   getTtyDevices: ()      => request('GET', '/api/tty-devices'),
