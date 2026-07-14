@@ -8,8 +8,9 @@ services:
     privileged: true
     network_mode: host  # Required for SIP/RTP ports and USB dongle access
     volumes:
-      - ~/data.json:/app/app/data.json
-      - ~/master.db:/var/log/asterisk/master.db
+      - /var/lib/sipconnect/data.json:/app/app/data.json
+      - /var/lib/sipconnect/service-account.json:/app/uploads/service-account.json
+      - /var/lib/sipconnect/master.db:/var/log/asterisk/master.db
     restart: unless-stopped
 
   nginx:
@@ -25,17 +26,17 @@ services:
     restart: unless-stopped
 
 # -----------------------------------------------------------------------
-# Before first run:
+# First run and upgrades:
 #
-# 1. Build the Vue frontend:
-#      cd frontend && npm install && npm run build
+#   ./start.sh
 #
-# 2. Generate a self-signed certificate (or use mkcert for no warnings):
-#      mkdir -p certs
-#      openssl req -x509 -newkey rsa:4096 -nodes -keyout certs/key.pem -out certs/cert.pem -days 365 -subj "/CN=sipconnect"
+# This builds the Vue frontend, generates a self-signed cert if missing,
+# seeds /var/lib/sipconnect/{data.json,master.db,service-account.json}
+# if missing (Docker bind-mounts a missing file source as a directory,
+# which breaks the app), then runs `docker-compose up -d --build`.
 #
-# 3. Start everything:
-#      docker-compose up -d --build
+# The data dir is a fixed absolute path (not ~) so it resolves the same
+# regardless of which user or sudo invokes docker-compose/start.sh.
 #
 # Development (without Docker):
 #   Terminal 1: uvicorn app.main:app --reload
