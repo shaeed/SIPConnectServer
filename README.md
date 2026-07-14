@@ -2,75 +2,144 @@
 
 # SIPConnectServer
 
-**SIPConnectServer** is a lightweight SIP (Session Initiation Protocol) server designed to handle SIP registrations, proxy calls, and integrate easily with VoIP clients and gateways.  
-This project aims to provide a simple, configurable solution for SIP-based voice communication in a local environment (to be used with VPN).
+**SIPConnectServer** is a management and notification layer on top of Asterisk PBX. It lets you run SIP-based voice/SMS communication through USB GSM dongles, and pushes call/SMS alerts to Android and browser clients in real time.
+This project aims to provide a simple, self-hosted solution for SIP-based voice communication in a local environment (to be used with VPN).
 
 ---
 
 ## Features
 
-✅ SIP registration handling  
-✅ Call proxying and routing  
-✅ Simple configuration  
-✅ Compatible with standard SIP clients (Zoiper, Linphone, softphones, etc.)  
-✅ Extensible for integration with Asterisk, FreeSWITCH, or other VoIP infrastructure
+✅ SIP registration handling via Asterisk, using USB GSM dongles as trunks
+✅ Auto-generated Asterisk config (`pjsip.conf`, `dongle.conf`, `extensions.conf`) from a simple user list
+✅ Incoming call/SMS alerts pushed to devices via Firebase Cloud Messaging (Android) and Web Push (Chrome/Firefox)
+✅ Outgoing SMS routed back through the dongle or forwarded via Firebase
+✅ Vue-based admin dashboard: manage SIP users, view/remove registered devices (FCM + Web Push), browse Call Logs and SMS Logs
+✅ Single `./start.sh` script for first-time setup and upgrades
 
 ---
 
 ## Table of Contents
 
-- [Getting Started](#getting-started)
+- [Architecture](#architecture)
 - [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Quick Start (Docker)](#quick-start-docker)
+- [Upgrading](#upgrading)
+- [Local Development (without Docker)](#local-development-without-docker)
+- [Using the Dashboard](#using-the-dashboard)
+- [Testing & Linting](#testing--linting)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## Getting Started
+## Architecture
 
-These instructions will help you get a copy of **SIPConnectServer** up and running on your local machine or server.
+The stack runs as two containers behind `docker-compose`:
+
+- **`sipconnect`** — Asterisk + FastAPI (`app/`), managed by `supervisord`. Generates Asterisk config from a JSON user database, handles SIP/SMS alerts, and serves the REST API.
+- **`nginx`** — terminates TLS, serves the built Vue frontend (`frontend/dist`), and proxies `/sip`, `/api`, `/gsm`, `/upload_sa` to the FastAPI service.
+
+Persistent state (`data.json`, `master.db`, `service-account.json`) is bind-mounted from a fixed host path (`/var/lib/sipconnect` by default) so it survives container rebuilds.
 
 ---
 
 ## Prerequisites
 
-- **Python 3.8+**
-- **Docker** (for containerized deployment)
-- Dongle with SIM card
+- **Docker** and **Docker Compose**
+- **Node.js/npm** (only needed to build the frontend — `start.sh` runs this for you)
+- A USB GSM dongle with a SIM card
+- `sudo` access (the SIP container needs `privileged: true` for dongle access, and `/var/lib/sipconnect` is root-owned by default)
 
 ---
 
-## Installation
-
-Clone the repository:
+## Quick Start (Docker)
 
 ```bash
 git clone https://github.com/shaeed/SIPConnectServer.git
 cd SIPConnectServer
+./start.sh
 ```
-Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+
+`start.sh` does everything needed for a first run:
+
+1. Builds the Vue frontend (`cd frontend && npm install && npm run build`)
+2. Generates a self-signed TLS certificate under `certs/` if one doesn't already exist
+3. Seeds `data.json`, `master.db`, and `service-account.json` under the data directory (default `/var/lib/sipconnect`, override with `SIPCONNECT_DATA_DIR`) if they don't already exist — this avoids a Docker bind-mount pitfall where a missing source file gets silently created as a directory instead
+4. Runs `docker-compose up -d --build`
+
+Once it's up, open `https://<server-ip>/` (you'll need to accept the self-signed cert warning unless you swap in your own certificate) to reach the admin dashboard. From there:
+
+- Upload your Firebase service account JSON (for push notifications) under the Config card
+- Add a SIP user, picking the dongle's audio/data `ttyUSB` interfaces
+- Point your SIP client (e.g. ZoiPer) at the server using that username/password
+
 ---
 
-## Usage
-
-To start the server, run:
+## Upgrading
 
 ```bash
-uvicorn app.main:app --reaload
+git pull
+./start.sh
 ```
-Or use the provided Dockerfile to build and run a container:
+
+Re-running `start.sh` rebuilds the frontend and restarts the containers (`docker-compose up -d --build`), picking up both backend and frontend changes. It's safe to re-run any time — it only seeds data files that don't already exist.
+
+---
+
+## Local Development (without Docker)
 
 ```bash
-docker build -t sipconnectserver .
-docker run -d -p 5060:5060/udp sipconnectserver
+# Backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Frontend (separate terminal, proxies API calls to :8000)
+cd frontend
+npm install
+npm run dev
 ```
-By default, the server listens on UDP port 5060 — the standard SIP port.
+
+---
+
+## Using the Dashboard
+
+- **Users** — add, edit, or delete SIP users; Asterisk config is regenerated and Asterisk restarted automatically on any change.
+- **Devices** — each user row has a devices icon that opens a dialog listing every device registered for FCM push, Web Push, or both, with a one-click remove.
+- **Call Logs / SMS Logs** — separate pages under the nav bar, backed by the SQLite call/SMS log.
+- **Notifications** — lets a browser subscribe to Web Push alerts for a given SIP username (no app install required for desktop notifications).
+
+---
+
+## Testing & Linting
+
+```bash
+# Run all backend tests
+PYTHONPATH=. pytest
+
+# Run a single test file / test
+PYTHONPATH=. pytest test/test_main.py
+PYTHONPATH=. pytest test/test_main.py::test_function_name
+
+# Lint (blocking: syntax errors / undefined names)
+flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+# Lint (full, non-blocking)
+flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+```
+
+CI runs these on every push to `dev` and on all pull requests.
+
+---
+
+## Configuration
+
+| Setting | Where | Notes |
+|---|---|---|
+| Data directory | `SIPCONNECT_DATA_DIR` env var (used by `start.sh`) | Defaults to `/var/lib/sipconnect`; must be an absolute path so it resolves the same under `sudo` or any user |
+| Firebase service account | Dashboard → Config card (`/upload_sa`) | Required for FCM/Web Push alerts to be sent |
+| SIP port | `docker-compose.yml` (`network_mode: host`) | UDP 5060, standard SIP |
+| Dashboard/API | `nginx` | HTTPS on 443 (redirects from 80), proxies to FastAPI on `127.0.0.1:8000` |
 
 ---
 
@@ -95,4 +164,3 @@ This project is licensed under the MIT License — see LICENSE for details.
 ## Author
 
 Maintained by Shaeed Khan.
-
