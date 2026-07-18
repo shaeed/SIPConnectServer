@@ -6,7 +6,7 @@ cd "$SCRIPT_DIR"
 
 # Fixed absolute path (not ~) so it resolves the same regardless of which
 # user or sudo runs this script or docker-compose directly.
-DATA_DIR="${SIPCONNECT_DATA_DIR:-/var/lib/sipconnect}"
+DATA_DIR="${SIMLINK_DATA_DIR:-/var/lib/simlink}"
 
 echo "==> Building frontend"
 (cd frontend && npm install && npm run build)
@@ -16,7 +16,7 @@ if [ ! -f certs/cert.pem ] || [ ! -f certs/key.pem ]; then
   echo "    No certs found in certs/, generating a self-signed one"
   mkdir -p certs
   openssl req -x509 -newkey rsa:4096 -nodes \
-    -keyout certs/key.pem -out certs/cert.pem -days 365 -subj "/CN=sipconnect"
+    -keyout certs/key.pem -out certs/cert.pem -days 365 -subj "/CN=simlink"
 else
   echo "    Existing certs found, skipping"
 fi
