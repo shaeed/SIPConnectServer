@@ -1,6 +1,6 @@
 self.addEventListener('push', (event) => {
   const payload = event.data ? event.data.json() : {}
-  const title = payload.title || 'SIPConnect'
+  const title = payload.title || 'SimLink'
   const options = {
     body: payload.body || '',
     icon: '/favicon.ico',

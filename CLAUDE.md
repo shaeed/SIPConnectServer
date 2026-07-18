@@ -41,7 +41,7 @@ CI runs on push to `dev` and all pull requests via `.github/workflows/python-app
 
 ## Architecture
 
-**SIPConnectServer** is a FastAPI server that acts as the management and notification layer on top of Asterisk PBX. It enables SIP-based voice communication via USB GSM dongles and pushes call/SMS alerts to Android clients via Firebase.
+**SimLinkServer** is a FastAPI server that acts as the management and notification layer on top of Asterisk PBX. It enables SIP-based voice communication via USB GSM dongles and pushes call/SMS alerts to Android clients via Firebase.
 
 ### Core Data Flow
 

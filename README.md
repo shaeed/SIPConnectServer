@@ -1,8 +1,8 @@
-[![Build Status](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/python-app.yml) [![CodeQL](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/shaeed/SIPConnectServer/actions/workflows/github-code-scanning/codeql)
+[![Build Status](https://github.com/shaeed/SimLinkServer/actions/workflows/python-app.yml/badge.svg)](https://github.com/shaeed/SimLinkServer/actions/workflows/python-app.yml) [![CodeQL](https://github.com/shaeed/SimLinkServer/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/shaeed/SimLinkServer/actions/workflows/github-code-scanning/codeql)
 
-# SIPConnectServer
+# SimLinkServer
 
-**SIPConnectServer** is a management and notification layer on top of Asterisk PBX. It lets you run SIP-based voice/SMS communication through USB GSM dongles, and pushes call/SMS alerts to Android and browser clients in real time.
+**SimLinkServer** is a management and notification layer on top of Asterisk PBX. It lets you run SIP-based voice/SMS communication through USB GSM dongles, and pushes call/SMS alerts to Android and browser clients in real time.
 This project aims to provide a simple, self-hosted solution for SIP-based voice communication in a local environment (to be used with VPN).
 
 ---
@@ -37,10 +37,10 @@ This project aims to provide a simple, self-hosted solution for SIP-based voice 
 
 The stack runs as two containers behind `docker-compose`:
 
-- **`sipconnect`** — Asterisk + FastAPI (`app/`), managed by `supervisord`. Generates Asterisk config from a JSON user database, handles SIP/SMS alerts, and serves the REST API.
+- **`simlink`** — Asterisk + FastAPI (`app/`), managed by `supervisord`. Generates Asterisk config from a JSON user database, handles SIP/SMS alerts, and serves the REST API.
 - **`nginx`** — terminates TLS, serves the built Vue frontend (`frontend/dist`), and proxies `/sip`, `/api`, `/gsm`, `/upload_sa` to the FastAPI service.
 
-Persistent state (`data.json`, `master.db`, `service-account.json`) is bind-mounted from a fixed host path (`/var/lib/sipconnect` by default) so it survives container rebuilds.
+Persistent state (`data.json`, `master.db`, `service-account.json`) is bind-mounted from a fixed host path (`/var/lib/simlink` by default) so it survives container rebuilds.
 
 ---
 
@@ -49,15 +49,15 @@ Persistent state (`data.json`, `master.db`, `service-account.json`) is bind-moun
 - **Docker** and **Docker Compose**
 - **Node.js/npm** (only needed to build the frontend — `start.sh` runs this for you)
 - A USB GSM dongle with a SIM card
-- `sudo` access (the SIP container needs `privileged: true` for dongle access, and `/var/lib/sipconnect` is root-owned by default)
+- `sudo` access (the SIP container needs `privileged: true` for dongle access, and `/var/lib/simlink` is root-owned by default)
 
 ---
 
 ## Quick Start (Docker)
 
 ```bash
-git clone https://github.com/shaeed/SIPConnectServer.git
-cd SIPConnectServer
+git clone https://github.com/shaeed/SimLinkServer.git
+cd SimLinkServer
 ./start.sh
 ```
 
@@ -65,7 +65,7 @@ cd SIPConnectServer
 
 1. Builds the Vue frontend (`cd frontend && npm install && npm run build`)
 2. Generates a self-signed TLS certificate under `certs/` if one doesn't already exist
-3. Seeds `data.json`, `master.db`, and `service-account.json` under the data directory (default `/var/lib/sipconnect`, override with `SIPCONNECT_DATA_DIR`) if they don't already exist — this avoids a Docker bind-mount pitfall where a missing source file gets silently created as a directory instead
+3. Seeds `data.json`, `master.db`, and `service-account.json` under the data directory (default `/var/lib/simlink`, override with `SIMLINK_DATA_DIR`) if they don't already exist — this avoids a Docker bind-mount pitfall where a missing source file gets silently created as a directory instead
 4. Runs `docker-compose up -d --build`
 
 Once it's up, open `https://<server-ip>/` (you'll need to accept the self-signed cert warning unless you swap in your own certificate) to reach the admin dashboard. From there:
@@ -136,7 +136,7 @@ CI runs these on every push to `dev` and on all pull requests.
 
 | Setting | Where | Notes |
 |---|---|---|
-| Data directory | `SIPCONNECT_DATA_DIR` env var (used by `start.sh`) | Defaults to `/var/lib/sipconnect`; must be an absolute path so it resolves the same under `sudo` or any user |
+| Data directory | `SIMLINK_DATA_DIR` env var (used by `start.sh`) | Defaults to `/var/lib/simlink`; must be an absolute path so it resolves the same under `sudo` or any user |
 | Firebase service account | Dashboard → Config card (`/upload_sa`) | Required for FCM/Web Push alerts to be sent |
 | SIP port | `docker-compose.yml` (`network_mode: host`) | UDP 5060, standard SIP |
 | Dashboard/API | `nginx` | HTTPS on 443 (redirects from 80), proxies to FastAPI on `127.0.0.1:8000` |

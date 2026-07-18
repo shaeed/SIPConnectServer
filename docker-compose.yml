@@ -1,28 +1,28 @@
 
 services:
-  sipconnect:
+  simlink:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sipconnect
+    container_name: simlink
     privileged: true
     network_mode: host  # Required for SIP/RTP ports and USB dongle access
     volumes:
-      - /var/lib/sipconnect/data.json:/app/app/data.json
-      - /var/lib/sipconnect/service-account.json:/app/uploads/service-account.json
-      - /var/lib/sipconnect/master.db:/var/log/asterisk/master.db
+      - /var/lib/simlink/data.json:/app/app/data.json
+      - /var/lib/simlink/service-account.json:/app/uploads/service-account.json
+      - /var/lib/simlink/master.db:/var/log/asterisk/master.db
     restart: unless-stopped
 
   nginx:
     image: nginx:alpine
-    container_name: sipconnect-nginx
+    container_name: simlink-nginx
     network_mode: host  # Same host network so it can proxy to localhost:8000
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./frontend/dist:/usr/share/nginx/html:ro
       - ./certs:/etc/nginx/certs:ro
     depends_on:
-      - sipconnect
+      - simlink
     restart: unless-stopped
 
 # -----------------------------------------------------------------------
@@ -31,7 +31,7 @@ services:
 #   ./start.sh
 #
 # This builds the Vue frontend, generates a self-signed cert if missing,
-# seeds /var/lib/sipconnect/{data.json,master.db,service-account.json}
+# seeds /var/lib/simlink/{data.json,master.db,service-account.json}
 # if missing (Docker bind-mounts a missing file source as a directory,
 # which breaks the app), then runs `docker-compose up -d --build`.
 #
