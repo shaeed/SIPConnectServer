@@ -8,7 +8,7 @@ const route = useRoute()
     <v-app-bar color="primary" elevation="2">
       <v-app-bar-title>
         <v-icon start>mdi-phone-voip</v-icon>
-        SIPConnect
+        SimLink
       </v-app-bar-title>
       <v-btn variant="text" to="/" :active="route.path === '/'">Dashboard</v-btn>
       <v-btn variant="text" to="/logs/calls" :active="route.path === '/logs/calls'">Call Logs</v-btn>
