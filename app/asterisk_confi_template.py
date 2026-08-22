@@ -41,7 +41,7 @@ password={pjsip_pass}
 
 [{pjsip_user}]
 type=aor
-max_contacts=1
+max_contacts=5
 remove_existing=yes
 
 [{pjsip_user}]
@@ -51,7 +51,7 @@ aors={pjsip_user}
 auth={pjsip_auth}
 context={pjsip_context}
 disallow=all
-allow=ulaw,alaw,gsm
+allow=opus,g722,ulaw,alaw,gsm
 direct_media=no
 force_rport=yes
 rewrite_contact=yes
@@ -71,12 +71,13 @@ extension_template = """
 [{ext_gsm_incoming}]
 ; === Incoming GSM call ===
 exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
+ same => n,Ringing()                      ; Send ringback tone to PSTN caller immediately
  same => n,Set(PHONE=${{CALLERID(num)}})
  same => n,System(curl -X POST http://localhost:8000/sip/alert/call -H "Content-Type: application/json" -d '{{"username": "{ext_sip_user}", "phone_number": "${{PHONE}}"}}')
 
- ; Wait loop: check Zoiper for up to 25 sec (2 sec interval)
+ ; Wait loop: check Zoiper for up to 25 sec (1 sec interval)
  same => n,Set(TIMEOUT=25)
- same => n,Set(CHECK_INTERVAL=2)
+ same => n,Set(CHECK_INTERVAL=1)
  same => n,Set(ELAPSED=0)
 
  same => n(while_check),Set(STATUS=${{DEVICE_STATE(PJSIP/{ext_sip_user})}})
@@ -89,7 +90,8 @@ exten => s,1,NoOp(Incoming GSM call from ${{CALLERID(num)}})
 
 ; === If Zoiper comes online ===
  same => n(got_online),NoOp(Zoiper came online, dialing now)
- same => n,Dial(PJSIP/{ext_sip_user},20)
+ ;same => n,Dial(PJSIP/{ext_sip_user},20)
+ same => n,Dial(${{PJSIP_DIAL_CONTACTS({ext_sip_user})}},30)
  same => n,GotoIf($["${{DIALSTATUS}}"="ANSWER"]?done)
 
 ; === If no answer, fallback ===
@@ -142,6 +144,7 @@ exten => _X.,1,NoOp(Calling ${{EXTEN}} through {ext_dongle_id})
 ; === SMS handler === ZoiPer to GSM message
 [{ext_gsm_outgoing_sms}]
 exten => _X.,1,NoOp(Sending SMS to ${{EXTEN}} through {ext_dongle_id})
- same => n,System(/usr/sbin/asterisk -rx "dongle sms {ext_dongle_id} ${{EXTEN}} ${{MESSAGE(body)}}")
+ ;same => n,System(/usr/sbin/asterisk -rx "dongle sms {ext_dongle_id} ${{EXTEN}} ${{MESSAGE(body)}}")
+ same => n,DongleSendSMS({ext_dongle_id}, ${{EXTEN}}, "${{MESSAGE(body)}}")
  same => n,Hangup()
 """
